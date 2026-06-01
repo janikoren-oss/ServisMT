@@ -13,6 +13,8 @@
 ALTER TABLE public.services ADD COLUMN IF NOT EXISTS repair_result TEXT DEFAULT '';
 ALTER TABLE public.services ADD COLUMN IF NOT EXISTS created_by_name TEXT DEFAULT '';
 ALTER TABLE public.services ADD COLUMN IF NOT EXISTS returned_by_name TEXT DEFAULT '';
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS error_category TEXT DEFAULT '';
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS is_repeat_service BOOLEAN DEFAULT false;
 
 -- ── 1. TABELE ────────────────────────────────────────────────
 

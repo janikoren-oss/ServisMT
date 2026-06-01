@@ -117,6 +117,17 @@ textarea{resize:vertical;min-height:68px}
 .sn-opt:hover{background:#eff6ff}
 .sn-opt.sn-in-service{color:#dc2626;cursor:not-allowed;background:#fff5f5}
 .sn-opt.sn-in-service:hover{background:#fee2e2}
+.stat-card.clickable{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.stat-card.clickable:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.13)}
+.cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.cat-chip{padding:5px 10px;border-radius:20px;border:1.5px solid #e2e8f0;cursor:pointer;font-size:.74rem;font-weight:600;background:#f8fafc;transition:all .15s;color:#374151;user-select:none;display:inline-flex;align-items:center;gap:4px}
+.cat-chip:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff}
+.cat-chip.selected{background:#2563eb;color:#fff;border-color:#2563eb}
+.repeat-banner{background:#fff7ed;border:1.5px solid #fed7aa;border-radius:8px;padding:9px 13px;font-size:.78rem;color:#9a3412;display:flex;gap:9px;align-items:flex-start;margin-bottom:2px}
+.days-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:.7rem;font-weight:700}
+.days-ok{background:#dcfce7;color:#166534}
+.days-soon{background:#fef3c7;color:#92400e}
+.days-over{background:#fee2e2;color:#b91c1c}
 .sn-empty{padding:10px;color:#94a3b8;font-size:.8rem;text-align:center}
 /* ─ MODAL ─ */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -297,7 +308,20 @@ textarea{resize:vertical;min-height:68px}
               <div class="card-header"><span class="card-title">&#128202; SLA statistika</span></div>
               <div id="sla-stats"></div>
             </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">&#128202; Kategorije napak</span></div>
+              <div id="cat-stats"></div>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Stat detail -->
+      <div class="modal-overlay" id="modal-stat">
+        <div class="modal" style="max-width:580px">
+          <div class="modal-header"><h3 id="modal-stat-title">Servisi</h3><button class="close-x" data-close="modal-stat">&#215;</button></div>
+          <div class="modal-body" id="modal-stat-body" style="max-height:60vh;overflow-y:auto"></div>
+          <div class="modal-footer"><button class="btn btn-secondary" data-close="modal-stat">Zapri</button></div>
         </div>
       </div>
 
@@ -351,8 +375,17 @@ textarea{resize:vertical;min-height:68px}
               <input type="text" id="partner" value="Billy POS d.o.o.">
             </div>
             <div class="form-group full">
+              <label>Kategorija napake</label>
+              <div class="cat-chips" id="cat-chips-new"></div>
+              <input type="hidden" id="error-category-new">
+            </div>
+            <div class="form-group full" id="repeat-banner-wrap" style="display:none">
+              <div class="repeat-banner"><span>&#9888;&#65039;</span><span id="repeat-banner-text">Ta terminal je bil predhodno vrnjen kot &ldquo;Ni popravljeno&rdquo;. Nalog bo označen kot ponovni servis.</span></div>
+            </div>
+            <input type="hidden" id="is-repeat-service" value="0">
+            <div class="form-group full">
               <label>Opis napake *</label>
-              <textarea id="error-desc" placeholder="Opi&#353;i simptome, napako ali zahtevo za posodobitev..."></textarea>
+              <textarea id="error-desc" placeholder="Opiši simptome, napako ali zahtevo za posodobitev..."></textarea>
             </div>
             <div class="form-group full">
               <label>Interni komentar tehnika</label>
@@ -500,6 +533,7 @@ textarea{resize:vertical;min-height:68px}
         <div class="form-group"><label>Servisni partner</label><input type="text" id="edit-partner"></div>
         <div class="form-group full"><label>Opis napake</label><textarea id="edit-error-desc"></textarea></div>
         <div class="form-group full"><label>Komentar tehnika</label><textarea id="edit-tech-notes"></textarea></div>
+        <div class="form-group full"><label>Kategorija napake</label><div class="cat-chips" id="cat-chips-edit"></div><input type="hidden" id="error-category-edit"></div>
         <div class="form-group full"><label>Status</label>
           <select id="edit-status"><option value="active">V servisu</option><option value="returned">Vrnjen</option></select>
         </div>
@@ -551,6 +585,20 @@ textarea{resize:vertical;min-height:68px}
 'use strict';
 const ALL_DEVICES=["N860W808544", "N860W808545", "N860W808536", "N860W808540", "N860W808543", "N860W813906", "N860W813902", "N860W813914", "N860W813910", "N860W813915", "N860W813903", "N860W813911", "N860W813907", "N860W813916", "N860W813904", "N860W813912", "N860W813908", "N860W813917", "N860W813905", "N860W813913", "N860W813909", "N860W813918", "N860W813922", "N860W813926", "N860W813930", "N860W813919", "N860W813923", "N860W813927", "N860W813931", "N860W813920", "N860W813924", "N860W813928", "N860W813932", "N860W813921", "N860W813925", "N860W813933", "N860W813934", "N860W813929", "N860W813938", "N860W813942", "N860W813935", "N860W813946", "N860W813939", "N860W813943", "N860W813936", "N860W813947", "N860W813940", "N860W813937", "N860W813944", "N860W813941", "N860W813948", "N860W813950", "N860W813945", "N860W813954", "N860W813949", "N860W813951", "N860W813958", "N860W813955", "N860W813962", "N860W813952", "N860W813959", "N860W813956", "N860W813963", "N860W813953", "N860W813960", "N860W813957", "N860W813964", "N860W813966", "N860W813961", "N860W813970", "N860W813965", "N860W813967", "N860W813974", "N860W813971", "N860W813978", "N860W813968", "N860W813975", "N860W813972", "N860W813979", "N860W813969", "N860W813976", "N860W813973", "N860W813980", "N860W813982", "N860W813977", "N860W813986", "N860W813981", "N860W813983", "N860W813990", "N860W813987", "N860W813994", "N860W813984", "N860W813991", "N860W813988", "N860W813995", "N860W813985", "N860W813992", "N860W813989", "N860W813996", "N860W813998", "N860W813993", "N860W814002", "N860W813997", "N860W814006", "N860W813999", "N860W814003", "N860W814010", "N860W814007", "N860W814000", "N860W814004", "N860W814011", "N860W814008", "N860W814001", "N860W814005", "N860W814012", "N860W814009", "N860W814014", "N860W814018", "N860W814013", "N860W814022", "N860W814015", "N860W814019", "N860W814026", "N860W814023", "N860W814016", "N860W814020", "N860W814027", "N860W814024", "N860W814017", "N860W814021", "N860W814028", "N860W814025", "N860W814030", "N860W814034", "N860W814029", "N860W814031", "N860W814038", "N860W814035", "N860W814042", "N860W814032", "N860W814039", "N860W814043", "N860W814036", "N860W814033", "N860W814040", "N860W814037", "N860W814046", "N860W814044", "N860W814041", "N860W814050", "N860W814047", "N860W814054", "N860W814045", "N860W814051", "N860W814048", "N860W814055", "N860W814058", "N860W814052", "N860W814049", "N860W814056", "N860W814059", "N860W814053", "N860W814062", "N860W814057", "N860W814060", "N860W814066", "N860W814063", "N860W814070", "N860W814061", "N860W814067", "N860W814064", "N860W814071", "N860W814074", "N860W814068", "N860W814065", "N860W814072", "N860W814075", "N860W814069", "N860W814078", "N860W814073", "N860W814076", "N860W814082", "N860W814086", "N860W814079", "N860W814077", "N860W814083", "N860W814087", "N860W814090", "N860W814080", "N860W814084", "N860W814088", "N860W814081", "N860W814085", "N860W814091", "N860W814089", "N860W814094", "N860W814098", "N860W814092", "N860W814102", "N860W814095", "N860W814099", "N860W814103", "N860W814096", "N860W814093", "N860W814100", "N860W814104", "N860W814097", "N860W814101", "N860W814106", "N860W814105", "N860W814110", "N860W814107", "N860W814114", "N860W814118", "N860W814111", "N860W814108", "N860W814115", "N860W814119", "N860W814112", "N860W814109", "N860W814116", "N860W814120", "N860W814113", "N860W814122", "N860W814117", "N860W814121", "N860W814126", "N860W814123", "N860W814130", "N860W814134", "N860W814127", "N860W814124", "N860W814131", "N860W814135", "N860W814128", "N860W814125", "N860W814132", "N860W814136", "N860W814129", "N860W814138", "N860W814133", "N860W814137", "N860W814142", "N860W814139", "N860W814146", "N860W814150", "N860W814143", "N860W814140", "N860W814147", "N860W814151", "N860W814144", "N860W814141", "N860W814148", "N860W814152", "N860W814145", "N860W814154", "N860W814149", "N860W814153", "N860W814158", "N860W814155", "N860W814162", "N860W814166", "N860W814159", "N860W814156", "N860W814163", "N860W814167", "N860W814160", "N860W814157", "N860W814164", "N860W814168", "N860W814170", "N860W814161", "N860W814165", "N860W814169", "N860W814171", "N860W814174", "N860W814178", "N860W814182", "N860W814172", "N860W814175", "N860W814179", "N860W814183", "N860W814173", "N860W814176", "N860W814180", "N860W814184", "N860W814186", "N860W814177", "N860W814181", "N860W814185", "N860W814187", "N860W814190", "N860W814194", "N860W814198", "N860W814188", "N860W814191", "N860W814195", "N860W814199", "N860W814189", "N860W814192", "N860W814196", "N860W814200", "N860W814202", "N860W814193", "N860W814197", "N860W814201", "N860W814203", "N860W814206", "N860W814210", "N860W814214", "N860W814204", "N860W814207", "N860W814211", "N860W814215", "N860W814205", "N860W814208", "N860W814212", "N860W814216", "N860W814218", "N860W814209", "N860W814213", "N860W814217", "N860W814219", "N860W814222", "N860W814226", "N860W814230", "N860W814220", "N860W814223", "N860W814227", "N860W814231", "N860W814221", "N860W814224", "N860W814228", "N860W814232", "N860W814234", "N860W814225", "N860W814229", "N860W814233", "N860W814235", "N860W814238", "N860W814242", "N860W814246", "N860W814236", "N860W814239", "N860W814243", "N860W814247", "N860W814237", "N860W814240", "N860W814244", "N860W814248", "N860W814250", "N860W814241", "N860W814245", "N860W814249", "N860W814251", "N860W814254", "N860W814258", "N860W814262", "N860W814252", "N860W814255", "N860W814259", "N860W814263", "N860W814253", "N860W814256", "N860W814260", "N860W814264", "N860W814266", "N860W814257", "N860W814261", "N860W814265", "N860W814267", "N860W814270", "N860W814274", "N860W814278", "N860W814268", "N860W814271", "N860W814275", "N860W814279", "N860W814269", "N860W814272", "N860W814276", "N860W814280", "N860W814282", "N860W814273", "N860W814277", "N860W814281", "N860W814283", "N860W814286", "N860W814290", "N860W814294", "N860W814284", "N860W814287", "N860W814291", "N860W814295", "N860W814285", "N860W814288", "N860W814292", "N860W814296", "N860W814298", "N860W814289", "N860W814293", "N860W814297", "N860W814299", "N860W814302", "N860W814310", "N860W814300", "N860W814306", "N860W814303", "N860W814311", "N860W814307", "N860W814301", "N860W814304", "N860W814312", "N860W814308", "N860W814314", "N860W814305", "N860W814313", "N860W814309", "N860W814315", "N860W814318", "N860W814322", "N860W814326", "N860W814316", "N860W814319", "N860W814323", "N860W814327", "N860W814317", "N860W814320", "N860W814324", "N860W814328", "N860W814325", "N860W814330", "N860W814329", "N860W814321", "N860W814334", "N860W814331", "N860W814342", "N860W814338", "N860W814335", "N860W814332", "N860W814343", "N860W814339", "N860W814336", "N860W814333", "N860W814344", "N860W814340", "N860W814337", "N860W814346", "N860W814345", "N860W814341", "N860W814350", "N860W814347", "N860W814354", "N860W814358", "N860W814351", "N860W814348", "N860W814355", "N860W814359", "N860W814352", "N860W814349", "N860W814356", "N860W814360", "N860W814353", "N860W814362", "N860W814357", "N860W814361", "N860W814366", "N860W814363", "N860W814370", "N860W814374", "N860W814367", "N860W814364", "N860W814371", "N860W814375", "N860W814368", "N860W814365", "N860W814372", "N860W814376", "N860W814369", "N860W814378", "N860W814373", "N860W814377", "N860W814382", "N860W814379", "N860W814386", "N860W814390", "N860W814383", "N860W814380", "N860W814387", "N860W814391", "N860W814384", "N860W814381", "N860W814388", "N860W814392", "N860W814385", "N860W814394", "N860W814389", "N860W814393", "N860W814395", "N860W814396", "N860W814397", "N860W814401", "N860W814405", "N860W814409", "N860W814398", "N860W814410", "N860W814406", "N860W814402", "N860W814399", "N860W814403", "N860W814407", "N860W814411", "N860W814400", "N860W814404", "N860W814412", "N860W814408", "N860W814413", "N860W814414", "N860W814415", "N860W814416"];
 const LOCATIONS=["MND Ljubljana", "MND Jesenice", "MND Nova Gorica", "MND Pivka", "MND Se\u017eana", "MND Zidani Most", "MND Dobova", "MND Celje", "MND Rogatec", "MND Ormo\u017e", "MND Maribor", "MND Murska Sobota"];
+const ERROR_CATEGORIES=[
+  {value:'display',   emoji:'\ud83d\udda5\ufe0f', label:'Zaslon',         desc:'Po\u0161kodovan ali neodziven zaslon'},
+  {value:'chip',      emoji:'\ud83d\udcb3',        label:'Bralnik chip',   desc:'IC \u010dip \u010ditalec ne deluje'},
+  {value:'magstripe', emoji:'\ud83d\udcb3',        label:'Bralnik magnet', desc:'Magnetni trak ne bere'},
+  {value:'nfc',       emoji:'\ud83d\udce1',        label:'NFC',            desc:'Brezsti\u010dno pla\u010devanje ne deluje'},
+  {value:'printer',   emoji:'\ud83d\udda8\ufe0f',  label:'Tiskalnik',      desc:'Napaka tiskalnika ali papir'},
+  {value:'battery',   emoji:'\ud83d\udd0b',        label:'Baterija',       desc:'Baterija ali napajanje'},
+  {value:'keyboard',  emoji:'\u2328\ufe0f',        label:'Tipkovnica',     desc:'Tipke ne delujejo'},
+  {value:'network',   emoji:'\ud83d\udcf6',        label:'Komunikacija',   desc:'WiFi, 4G ali omre\u017eje'},
+  {value:'software',  emoji:'\ud83d\udcbe',        label:'Programska op.', desc:'Napaka SW ali firmware'},
+  {value:'physical',  emoji:'\ud83d\udd27',        label:'Fiz. po\u0161kodba',  desc:'Padec, vlaga, mehanska po\u0161kodba'},
+  {value:'update',    emoji:'\ud83d\udd04',        label:'Posodobitev',    desc:'Redna posodobitev ali vzdr\u017eevanje'},
+  {value:'other',     emoji:'\u2753',              label:'Drugo',          desc:'Ostale napake'}
+];
 
 // ── SUPABASE ────────────────────────────────────────────────
 var supa = null;
@@ -561,9 +609,38 @@ var activeSNs = new Set();
 var allServicesCache = [];
 var dashPeriod = { type:'month', from:'', to:'' };
 var selectedSN = '';
+var selectedErrorCategory = '';
 
 var SUPA_URL = 'https://wkjumkmdqxdeayhnhrdq.supabase.co';
 var SUPA_KEY = 'sb_publishable_NbwhWTyqA6A23ty0e3kG1Q_hNUF8_dM';
+
+function renderCategoryChips(containerId, hiddenId, currentVal) {
+  var c=document.getElementById(containerId);
+  if (!c) return;
+  var h='';
+  ERROR_CATEGORIES.forEach(function(cat){
+    var sel=(currentVal===cat.value);
+    h+='<div class="cat-chip'+(sel?' selected':'')+'" data-cat="'+cat.value+'" data-container="'+containerId+'" data-hidden="'+hiddenId+'" title="'+escHtml(cat.desc)+'">'+cat.emoji+' '+cat.label+'</div>';
+  });
+  c.innerHTML=h;
+}
+function getLastNotFixed(sn) {
+  var hist=allServicesCache.filter(function(s){return s.serial_number===sn&&s.repair_result==='not_fixed';});
+  if (!hist.length) return null;
+  hist.sort(function(a,b){return new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at);});
+  return hist[0];
+}
+function daysPillHtml(dueDate, status) {
+  if (status!=='active'||!dueDate) return '';
+  var d=diffDays(todayStr(),dueDate);
+  if (d<0) return '<span class="days-pill days-over">'+Math.abs(d)+'d po roku</span>';
+  if (d<=3) return '<span class="days-pill days-soon">'+d+'d preostalo</span>';
+  return '<span class="days-pill days-ok">'+d+'d preostalo</span>';
+}
+function catLabel(val) {
+  var c=ERROR_CATEGORIES.find(function(x){return x.value===val;});
+  return c?c.emoji+' '+c.label:'';
+}
 
 function initSupabase() {
   var url = localStorage.getItem('smt_url') || SUPA_URL;
@@ -757,6 +834,15 @@ function initSnSelector() {
     document.getElementById('sn-feedback').style.color = '#16a34a';
     drop.classList.remove('open');
     calcDueDate();
+    var lastNF=getLastNotFixed(selectedSN);
+    if (lastNF) {
+      document.getElementById('repeat-banner-wrap').style.display='';
+      document.getElementById('repeat-banner-text').textContent='Terminal je bil '+fmtDate(lastNF.returned_date||lastNF.updated_at)+' vrnjen kot "Ni popravljeno". Nalog bo samodejno ozna\u010den kot ponovni servis.';
+      document.getElementById('is-repeat-service').value='1';
+    } else {
+      document.getElementById('repeat-banner-wrap').style.display='none';
+      document.getElementById('is-repeat-service').value='0';
+    }
   });
 }
 function renderSnDrop() {
@@ -815,7 +901,9 @@ async function submitNewService() {
     error_description: errDesc,
     technician_notes: document.getElementById('tech-notes').value.trim(),
     created_by: currentUser.id,
-    created_by_name: (currentProfile && currentProfile.full_name) || currentUser.email
+    created_by_name: (currentProfile && currentProfile.full_name) || currentUser.email,
+    error_category: document.getElementById('error-category-new').value || '',
+    is_repeat_service: document.getElementById('is-repeat-service').value === '1'
   };
   try {
     await dbInsert('services', svc);
@@ -842,6 +930,10 @@ function resetNewServiceForm() {
   document.getElementById('pri-normal').checked=true;
   var drop=document.getElementById('sn-drop');
   if (drop) drop.innerHTML='';
+  document.getElementById('repeat-banner-wrap').style.display='none';
+  document.getElementById('is-repeat-service').value='0';
+  document.getElementById('error-category-new').value='';
+  renderCategoryChips('cat-chips-new','error-category-new','');
 }
 
 // ── DETAIL MODAL ──────────────────────────────────────────────
@@ -866,6 +958,8 @@ function openDetail(id) {
     +'<div class="detail-cell"><div class="lbl">Datum vrnitve</div><div class="val">'+fmtDate(svc.returned_date)+'</div></div>'
     +'<div class="detail-cell"><div class="lbl">Naprava iz lokacije</div><div class="val">'+escHtml(svc.location||'—')+'</div></div>'
     +'<div class="detail-cell"><div class="lbl">Servisni partner</div><div class="val">'+escHtml(svc.service_partner||'—')+'</div></div>'
+    +(svc.error_category?'<div class="detail-cell"><div class="lbl">Kategorija</div><div class="val">'+escHtml(catLabel(svc.error_category))+'</div></div>':'')
+    +(svc.is_repeat_service?'<div class="detail-cell"><div class="lbl">Tip naloga</div><div class="val"><span class="badge b-amber">&#8635; Ponovni servis</span></div></div>':'')
     +'<div class="detail-cell"><div class="lbl">Ustvaril</div><div class="val">'+escHtml(svc.created_by_name||'—')+'</div></div>'
     +(svc.returned_by_name?'<div class="detail-cell"><div class="lbl">Zaključil</div><div class="val">'+escHtml(svc.returned_by_name)+(svc.repair_result==='not_fixed'?' <span class="badge b-amber" style="font-size:.65rem">Ni popravljeno</span>':'')+'</div></div>':'')
     +'</div>'
@@ -899,6 +993,8 @@ function openEdit(id) {
   document.getElementById('edit-partner').value=svc.service_partner||'Billy POS d.o.o.';
   document.getElementById('edit-error-desc').value=svc.error_description||'';
   document.getElementById('edit-tech-notes').value=svc.technician_notes||'';
+  renderCategoryChips('cat-chips-edit','error-category-edit',svc.error_category||'');
+  document.getElementById('error-category-edit').value=svc.error_category||'';
   document.getElementById('edit-status').value=svc.status;
   document.getElementById('edit-returned-date').value=svc.returned_date||'';
   document.getElementById('edit-return-wrap').style.display=svc.status==='returned'?'':'none';
@@ -921,6 +1017,7 @@ async function saveEdit() {
     service_partner: document.getElementById('edit-partner').value.trim(),
     error_description: document.getElementById('edit-error-desc').value.trim(),
     technician_notes: document.getElementById('edit-tech-notes').value.trim(),
+    error_category: document.getElementById('error-category-edit').value||'',
     status: newStatus,
     returned_date: newStatus==='returned'?(document.getElementById('edit-returned-date').value||todayStr()):null,
     updated_at: new Date().toISOString()
@@ -1029,12 +1126,13 @@ async function renderDashboard() {
 
   // Stats
   var notFixed=all.filter(function(s){return s.repair_result==='not_fixed';});
+  var repeatSvcs=all.filter(function(s){return s.is_repeat_service;});
   document.getElementById('stats-grid').innerHTML=
-    statCard('si-blue','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',active.length,'V servisu')+
-    statCard('si-red','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',overdue.length,'Po roku')+
-    statCard('si-amber','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',dueSoon.length,'Rok v '+(CFG.reminderDays||2)+' dnih')+
-    statCard('si-green','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',returned.length,'Vrnjenih v obdobju')+
-    statCard('si-red','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',notFixed.length,'Ni popravljeno (skupaj)');
+    statCard('si-blue','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',active.length,'V servisu','active')+
+    statCard('si-red','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',overdue.length,'Po roku','overdue')+
+    statCard('si-green','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',returned.length,'Vrnjenih v obdobju','returned')+
+    statCard('si-red','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',notFixed.length,'Ni popravljeno','not_fixed')+
+    statCard('si-amber','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>',repeatSvcs.length,'Ponovni servisi','repeat');
 
   // Active table
   var sorted=active.slice().sort(function(a,b){ var o={overdue:0,'due-soon':1,active:2}; return (o[calcStatus(a)]||2)-(o[calcStatus(b)]||2); }).slice(0,12);
@@ -1043,12 +1141,17 @@ async function renderDashboard() {
   } else {
     var rows='';
     sorted.forEach(function(s) {
-      rows+='<tr><td><span class="sn-link" data-action="history" data-sn="'+escHtml(s.serial_number)+'">'+escHtml(s.serial_number)+'</span></td>'
-        +'<td>'+badgeType(s.service_type)+'</td><td class="text-xs text-gray">'+fmtDate(s.request_date)+'</td><td class="text-xs text-gray">'+escHtml(s.location||'—')+'</td>'
-        +'<td class="text-xs">'+fmtDate(s.due_date)+'</td><td>'+badgeStatus(s)+'</td>'
+      var pill=daysPillHtml(s.due_date,s.status);
+      var st=calcStatus(s);
+      var rowStyle=st==='overdue'?' style="background:#fff5f5"':st==='due-soon'?' style="background:#fffbeb"':'';
+      rows+='<tr'+rowStyle+'>'
+        +'<td><span class="sn-link" data-action="history" data-sn="'+escHtml(s.serial_number)+'">'+escHtml(s.serial_number)+'</span>'+(s.is_repeat_service?'<span class="badge b-amber" style="font-size:.6rem;margin-left:3px">&#8635;</span>':'')+'</td>'
+        +'<td>'+badgeType(s.service_type)+(s.error_category?'<br><span style="font-size:.65rem;color:#64748b">'+escHtml(catLabel(s.error_category))+'</span>':'')+'</td>'
+        +'<td class="text-xs text-gray">'+escHtml(s.location||'—')+'</td>'
+        +'<td class="text-xs">'+fmtDate(s.due_date)+' '+pill+'</td>'
         +'<td><button class="btn btn-success btn-sm" data-action="open-return" data-id="'+escHtml(s.id)+'">&#10003; Zaklju&#269;i</button></td></tr>';
     });
-    document.getElementById('dash-active-table').innerHTML='<table><thead><tr><th>SN</th><th>Tip</th><th>Zahteva</th><th>Lokacija</th><th>Rok</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+    document.getElementById('dash-active-table').innerHTML='<table><thead><tr><th>SN</th><th>Tip / Kategorija</th><th>Lokacija</th><th>Rok</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   // Location stats — full history + currently active
@@ -1072,6 +1175,23 @@ async function renderDashboard() {
         +'<span class="loc-pct">'+pct+'%'+(actCnt?' <span style="color:#2563eb;font-size:.68rem">('+actCnt+' v ser.)</span>':'')+'</span></div>';
     });
     document.getElementById('location-stats').innerHTML=lh;
+  }
+
+  // Error category stats
+  var byCat={};
+  all.forEach(function(s){if(s.error_category){byCat[s.error_category]=(byCat[s.error_category]||0)+1;}});
+  var catSorted=Object.entries(byCat).sort(function(a,b){return b[1]-a[1];});
+  var maxCat=catSorted.length?catSorted[0][1]:1;
+  if(!catSorted.length){
+    document.getElementById('cat-stats').innerHTML='<div class="empty-state" style="padding:14px 0"><p>Ni podatkov o kategorijah.</p></div>';
+  } else {
+    var ch='';
+    catSorted.slice(0,8).forEach(function(e){
+      var lbl=catLabel(e[0])||e[0];
+      var barW=Math.round(e[1]/maxCat*100);
+      ch+='<div class="loc-row"><span class="loc-name" style="min-width:125px">'+escHtml(lbl)+'</span><div class="loc-bar"><div class="loc-fill" style="width:'+barW+'%;background:#8b5cf6"></div></div><span class="loc-cnt" style="color:#7c3aed">'+e[1]+'</span></div>';
+    });
+    document.getElementById('cat-stats').innerHTML=ch;
   }
 
   // Top devices
@@ -1105,8 +1225,36 @@ async function renderDashboard() {
     +'<div class="sla-card"><div class="sla-val">'+(avgD||'—')+'</div><div class="sla-lbl">Povp. dni</div></div>'
     +'</div>';
 }
-function statCard(cls,icon,val,lbl) {
-  return '<div class="stat-card"><div class="stat-icon '+cls+'">'+icon+'</div><div><div class="stat-value">'+val+'</div><div class="stat-label">'+lbl+'</div></div></div>';
+function statCard(cls,icon,val,lbl,statType) {
+  var extra=statType?' clickable" data-action="show-stat" data-stat="'+statType+'"':'"';
+  return '<div class="stat-card'+extra+'><div class="stat-icon '+cls+'">'+icon+'</div><div><div class="stat-value">'+val+'</div><div class="stat-label">'+lbl+'</div></div></div>';
+}
+
+// ── STAT DETAIL MODAL ─────────────────────────────────────────
+function showStatModal(type) {
+  var all=allServicesCache;
+  var title='', svcs=[];
+  if (type==='active')   { title='V servisu';           svcs=all.filter(function(s){return s.status==='active';}); }
+  else if(type==='overdue'){title='Po roku';             svcs=all.filter(function(s){return calcStatus(s)==='overdue';}); }
+  else if(type==='returned'){title='Vrnjenih v obdobju';svcs=all.filter(function(s){return s.status==='returned'&&inPeriod(s.returned_date);}); }
+  else if(type==='not_fixed'){title='Ni popravljeno';   svcs=all.filter(function(s){return s.repair_result==='not_fixed';}); }
+  else if(type==='repeat'){ title='Ponovni servisi';    svcs=all.filter(function(s){return s.is_repeat_service;}); }
+  svcs.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
+  document.getElementById('modal-stat-title').textContent=title+' ('+svcs.length+')';
+  if (!svcs.length){document.getElementById('modal-stat-body').innerHTML='<div class="empty-state"><p>Ni zadetkov.</p></div>';openModal('modal-stat');return;}
+  var rows='';
+  svcs.forEach(function(s){
+    rows+='<tr>'
+      +'<td><span class="sn-link" data-action="history" data-sn="'+escHtml(s.serial_number)+'">'+escHtml(s.serial_number)+'</span>'+(s.is_repeat_service?'<span class="badge b-amber" style="font-size:.6rem;margin-left:3px">&#8635;</span>':'')+'</td>'
+      +'<td>'+badgeType(s.service_type)+'</td>'
+      +'<td class="text-xs text-gray">'+fmtDate(s.request_date)+'</td>'
+      +'<td class="text-xs">'+fmtDate(s.due_date)+' '+daysPillHtml(s.due_date,s.status)+'</td>'
+      +'<td class="text-xs text-gray">'+escHtml(s.location||'—')+'</td>'
+      +'<td>'+badgeStatus(s)+'</td>'
+      +'<td><button class="btn btn-secondary btn-sm" data-action="view-detail" data-id="'+escHtml(s.id)+'">&#128269;</button></td></tr>';
+  });
+  document.getElementById('modal-stat-body').innerHTML='<table><thead><tr><th>SN</th><th>Tip</th><th>Zahteva</th><th>Rok</th><th>Lokacija</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+  openModal('modal-stat');
 }
 
 // ── SERVICES LIST ──────────────────────────────────────────────
@@ -1282,6 +1430,14 @@ document.addEventListener('click', async function(e) {
   var act=e.target.closest('[data-action]');
   if (!act) return;
   var action=act.dataset.action, id=act.dataset.id, sn=act.dataset.sn;
+  if (act.classList.contains('cat-chip')) {
+    var chips=document.querySelectorAll('#'+act.dataset.container+' .cat-chip');
+    chips.forEach(function(c){c.classList.remove('selected');});
+    act.classList.toggle('selected');
+    document.getElementById(act.dataset.hidden).value=act.classList.contains('selected')?act.dataset.cat:'';
+    return;
+  }
+  if (action==='show-stat') { showStatModal(act.dataset.stat); return; }
   if (action==='view-detail') openDetail(id);
   else if (action==='history') showDeviceHistory(sn);
   else if (action==='open-return') openReturnModal(id);
@@ -1370,6 +1526,7 @@ async function afterLogin() {
   document.getElementById('nav-devices').style.display=isAdmin()?'':'none';
   showScreen('app');
   setPeriod('month','','');
+  renderCategoryChips('cat-chips-new','error-category-new','');
 }
 
 // ── INIT ───────────────────────────────────────────────────────
