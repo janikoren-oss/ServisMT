@@ -808,13 +808,18 @@ function resetNewServiceForm() {
   document.getElementById('sn-input').value='';
   document.getElementById('sn-feedback').textContent='Izberi iz spustnega seznama';
   document.getElementById('sn-feedback').style.color='';
-  document.getElementById('new-service-form').reset();
   document.getElementById('req-date').value=todayStr();
+  document.getElementById('recv-date').value='';
   document.getElementById('due-date').value='';
   document.getElementById('due-hint').textContent='Izra\u010dunano iz datuma prevzema';
+  document.getElementById('location').value='';
   document.getElementById('partner').value='Billy POS d.o.o.';
+  document.getElementById('error-desc').value='';
+  document.getElementById('tech-notes').value='';
   document.getElementById('type-hw').checked=true;
   document.getElementById('pri-normal').checked=true;
+  var drop=document.getElementById('sn-drop');
+  if (drop) drop.innerHTML='';
 }
 
 // ── DETAIL MODAL ──────────────────────────────────────────────
