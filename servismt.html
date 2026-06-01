@@ -231,7 +231,7 @@ textarea{resize:vertical;min-height:68px}
     <div class="nav-item" data-nav="services">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Vsi servisi
     </div>
-    <div class="nav-item" data-nav="devices">
+    <div class="nav-item" data-nav="devices" id="nav-devices">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Naprave
     </div>
     <div class="nav-section">Sistem</div>
@@ -248,9 +248,6 @@ textarea{resize:vertical;min-height:68px}
     <div class="topbar">
       <span class="topbar-title" id="topbar-title">Dashboard</span>
       <div class="topbar-actions">
-        <button class="btn btn-teams" id="btn-teams">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Teams
-        </button>
         <button class="btn btn-primary" data-nav="new-service">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nov servis
         </button>
@@ -381,7 +378,7 @@ textarea{resize:vertical;min-height:68px}
             <input type="text" id="f-search" placeholder="I&#353;&#269;i SN, partner...">
             <select id="f-status">
               <option value="">Vsi statusi</option>
-              <option value="active">Aktivni</option>
+              <option value="active">Servis</option>
               <option value="overdue">Po roku</option>
               <option value="due-soon">Rok bli&#382;anje</option>
               <option value="returned">Vrnjeni</option>
@@ -502,7 +499,7 @@ textarea{resize:vertical;min-height:68px}
         <div class="form-group full"><label>Opis napake</label><textarea id="edit-error-desc"></textarea></div>
         <div class="form-group full"><label>Komentar tehnika</label><textarea id="edit-tech-notes"></textarea></div>
         <div class="form-group full"><label>Status</label>
-          <select id="edit-status"><option value="active">Aktiven</option><option value="returned">Vrnjen</option></select>
+          <select id="edit-status"><option value="active">V servisu</option><option value="returned">Vrnjen</option></select>
         </div>
         <div class="form-group full" id="edit-return-wrap"><label>Datum vrnitve</label><input type="date" id="edit-returned-date"></div>
       </div>
@@ -681,7 +678,7 @@ function badgeStatus(s) {
   if (st==='returned') return '<span class="badge b-green">Vrnjen</span>';
   if (st==='overdue') { var d=diffDays(s.due_date,todayStr()); return '<span class="badge b-red">Po roku ('+d+'d)</span>'; }
   if (st==='due-soon') { var d2=diffDays(todayStr(),s.due_date); return '<span class="badge b-amber">Rok v '+d2+'d</span>'; }
-  return '<span class="badge b-blue">Aktiven</span>';
+  return '<span class="badge b-blue">Servis</span>';
 }
 function badgeType(t) { return t==='hardware'?'<span class="badge b-purple">HW</span>':'<span class="badge b-blue">SW</span>'; }
 function badgePri(p) {
@@ -773,7 +770,7 @@ function calcDueDate() {
 // ── NEW SERVICE ───────────────────────────────────────────────
 async function submitNewService() {
   if (!selectedSN) { toast('Izberi serijsko \u0161tevilko iz seznama!','amber'); return; }
-  if (activeSNs.has(selectedSN)) { toast('Naprava '+selectedSN+' ima \u017ee aktiven servis!','red'); return; }
+  if (activeSNs.has(selectedSN)) { toast('Naprava '+selectedSN+' je \u017ee v servisu!','red'); return; }
   var reqDate = document.getElementById('req-date').value;
   var errDesc = document.getElementById('error-desc').value.trim();
   if (!reqDate) { toast('Vnesi datum zahteve!','amber'); return; }
@@ -995,7 +992,7 @@ async function renderDashboard() {
 
   // Stats
   document.getElementById('stats-grid').innerHTML=
-    statCard('si-blue','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',active.length,'Aktivnih servisov')+
+    statCard('si-blue','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',active.length,'V servisu')+
     statCard('si-red','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',overdue.length,'Po roku')+
     statCard('si-amber','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',dueSoon.length,'Rok v '+(CFG.reminderDays||2)+' dnih')+
     statCard('si-green','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',returned.length,'Vrnjenih v obdobju');
@@ -1003,7 +1000,7 @@ async function renderDashboard() {
   // Active table
   var sorted=active.slice().sort(function(a,b){ var o={overdue:0,'due-soon':1,active:2}; return (o[calcStatus(a)]||2)-(o[calcStatus(b)]||2); }).slice(0,12);
   if (!sorted.length) {
-    document.getElementById('dash-active-table').innerHTML='<div class="empty-state"><p>Ni aktivnih servisov. Odli&#269;no!</p></div>';
+    document.getElementById('dash-active-table').innerHTML='<div class="empty-state"><p>Ni servisov. Odli&#269;no!</p></div>';
   } else {
     var rows='';
     sorted.forEach(function(s) {
@@ -1285,7 +1282,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // App buttons
   document.getElementById('btn-signout').addEventListener('click', signOut);
-  document.getElementById('btn-teams').addEventListener('click', sendTeams);
   document.getElementById('btn-submit-new').addEventListener('click', submitNewService);
   document.getElementById('btn-cancel-new').addEventListener('click', function(){resetNewServiceForm();showView('dashboard');});
   document.getElementById('btn-confirm-return').addEventListener('click', confirmReturn);
@@ -1326,6 +1322,7 @@ async function afterLogin() {
   await loadSettings();
   document.getElementById('user-name').textContent=(currentProfile&&currentProfile.full_name)||currentUser.email;
   document.getElementById('user-role-badge').textContent=isAdmin()?' (admin)':'';
+  document.getElementById('nav-devices').style.display=isAdmin()?'':'none';
   showScreen('app');
   setPeriod('month','','');
 }
