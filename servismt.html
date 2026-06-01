@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServisMT – Evidenca Servisov</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh;display:flex}
+.sidebar{width:230px;background:#0f172a;color:#94a3b8;display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:width .2s}
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid #1e293b}
+.sidebar-logo h1{color:#f8fafc;font-size:1.1rem;font-weight:800;letter-spacing:-.5px}
+.sidebar-logo p{font-size:.72rem;color:#475569;margin-top:2px}
+.nav-section{padding:16px 16px 4px;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:#334155;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all .15s;font-size:.82rem;font-weight:500;border-left:3px solid transparent;user-select:none}
+.nav-item:hover{background:#1e293b;color:#e2e8f0}
+.nav-item.active{background:#1d4ed8;color:#fff;border-left-color:#60a5fa}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-bottom{padding:16px;border-top:1px solid #1e293b;font-size:.72rem;color:#334155;text-align:center}
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:1rem;font-weight:700;color:#1e293b}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.content{padding:28px;flex:1}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:#fff;border-radius:10px;padding:18px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.stat-icon{width:44px;height:44px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon svg{width:22px;height:22px}
+.si-blue{background:#dbeafe;color:#1d4ed8}
+.si-red{background:#fee2e2;color:#dc2626}
+.si-amber{background:#fef3c7;color:#d97706}
+.si-green{background:#dcfce7;color:#16a34a}
+.stat-value{font-size:1.6rem;font-weight:800;color:#1e293b;line-height:1}
+.stat-label{font-size:.75rem;color:#64748b;margin-top:3px}
+.card{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.07);padding:20px}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card-title{font-size:.9rem;font-weight:700;color:#1e293b}
+.dash-grid{display:grid;grid-template-columns:3fr 2fr;gap:18px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{padding:9px 14px;text-align:left;font-weight:700;color:#64748b;background:#f8fafc;border-bottom:2px solid #e2e8f0;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid #f1f5f9;color:#374151;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#fafbff}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.b-blue{background:#dbeafe;color:#1e40af}
+.b-red{background:#fee2e2;color:#b91c1c}
+.b-amber{background:#fef3c7;color:#92400e}
+.b-green{background:#dcfce7;color:#166534}
+.b-gray{background:#f1f5f9;color:#475569}
+.b-purple{background:#ede9fe;color:#6d28d9}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn svg{width:14px;height:14px}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:#f1f5f9;color:#374151;border:1px solid #e2e8f0}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-success{background:#16a34a;color:#fff}
+.btn-success:hover{background:#15803d}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-teams{background:#5b5fc7;color:#fff}
+.btn-teams:hover{background:#4a4fa8}
+.btn-sm{padding:4px 9px;font-size:.75rem}
+.btn-icon{padding:5px;background:none;border:1px solid #e2e8f0;border-radius:6px;color:#64748b;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.btn-icon:hover{background:#f1f5f9;color:#1e293b}
+.btn-icon svg{width:14px;height:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+label{font-size:.77rem;font-weight:700;color:#374151}
+input,select,textarea{padding:8px 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.83rem;color:#1e293b;transition:border-color .15s;outline:none;width:100%;background:#fff;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+input[readonly]{background:#f8fafc;color:#64748b;cursor:default}
+textarea{resize:vertical;min-height:72px}
+.sn-wrap{position:relative}
+.sn-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;max-height:180px;overflow-y:auto;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,.12);display:none}
+.sn-drop.open{display:block}
+.sn-opt{padding:7px 11px;cursor:pointer;font-size:.82rem;font-family:monospace}
+.sn-opt:hover{background:#f1f5f9}
+.sn-empty{padding:10px;color:#94a3b8;font-size:.82rem;text-align:center}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;transform:scale(.97);transition:transform .2s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal-lg{max-width:760px}
+.modal-header{padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1;border-radius:14px 14px 0 0}
+.modal-header h3{font-size:.95rem;font-weight:800}
+.modal-body{padding:22px}
+.modal-footer{padding:14px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px}
+.close-x{background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;border-radius:5px;display:flex;align-items:center}
+.close-x:hover{background:#f1f5f9;color:#374151}
+.close-x svg{width:18px;height:18px}
+.view{display:none}
+.view.active{display:block}
+.alert{padding:10px 14px;border-radius:8px;font-size:.82rem;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.alert svg{width:16px;height:16px;flex-shrink:0}
+.alert-red{background:#fee2e2;color:#b91c1c;border-left:4px solid #dc2626}
+.alert-amber{background:#fef3c7;color:#92400e;border-left:4px solid #f59e0b}
+.filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.filters input,.filters select{width:auto;min-width:140px}
+.radio-group{display:flex;gap:10px}
+.radio-opt{flex:1;position:relative}
+.radio-opt input{position:absolute;opacity:0;width:0;height:0}
+.radio-opt label{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px;border:2px solid #e2e8f0;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:600;color:#374151;transition:all .15s;text-align:center}
+.radio-opt input:checked+label{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+.timeline{display:flex;flex-direction:column}
+.tl-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.tl-item:last-child{border-bottom:none}
+.tl-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.tl-dot-blue{background:#2563eb}
+.tl-dot-green{background:#16a34a}
+.tl-dot-red{background:#dc2626}
+.top-dev-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f1f5f9;gap:10px}
+.top-dev-row:last-child{border-bottom:none}
+.top-dev-bar{flex:1;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.top-dev-fill{height:100%;background:#2563eb;border-radius:3px;transition:width .4s}
+.empty-state{text-align:center;padding:40px 0;color:#94a3b8}
+.empty-state svg{width:44px;height:44px;margin-bottom:10px;opacity:.3;display:block;margin-left:auto;margin-right:auto}
+.empty-state p{font-size:.85rem}
+.section-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.section-title{font-size:.95rem;font-weight:800}
+.warn-box{background:#fff7ed;border:1.5px solid #fed7aa;border-radius:8px;padding:10px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;font-size:.8rem;color:#9a3412}
+.warn-box svg{width:16px;height:16px;color:#ea580c;flex-shrink:0;margin-top:1px}
+.dl-bar{width:70px;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle}
+.dl-fill{height:100%;border-radius:3px}
+.text-xs{font-size:.72rem}
+.text-sm{font-size:.82rem}
+.text-gray{color:#64748b}
+.text-red{color:#dc2626}
+.text-amber{color:#d97706}
+.text-green{color:#16a34a}
+.font-mono{font-family:monospace}
+.font-bold{font-weight:700}
+.mb-1{margin-bottom:6px}
+.mb-2{margin-bottom:14px}
+.mb-3{margin-bottom:22px}
+.flex{display:flex}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.flex-center{display:flex;align-items:center}
+.gap-1{gap:6px}
+.gap-2{gap:10px}
+.settings-section{margin-bottom:28px}
+.settings-section h3{font-size:.85rem;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
+.input-hint{font-size:.72rem;color:#94a3b8;margin-top:2px}
+.sla-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.sla-card{background:#f8fafc;border-radius:8px;padding:14px;text-align:center}
+.sla-val{font-size:1.4rem;font-weight:800;color:#1e293b}
+.sla-lbl{font-size:.72rem;color:#64748b;margin-top:2px}
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>&#128295; ServisMT</h1>
+    <p>Evidenca servisov terminalov</p>
+  </div>
+  <div class="nav-section">Pregled</div>
+  <div class="nav-item active" onclick="showView('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </div>
+  <div class="nav-section">Upravljanje</div>
+  <div class="nav-item" onclick="showView('new-service')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Nov servis
+  </div>
+  <div class="nav-item" onclick="showView('services')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Vsi servisi
+  </div>
+  <div class="nav-item" onclick="showView('devices')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    Naprave
+  </div>
+  <div class="nav-section">Sistem</div>
+  <div class="nav-item" onclick="showView('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Nastavitve
+  </div>
+  <div class="nav-bottom">ServisMT v1.0 &bull; 520 terminalov</div>
+</nav>
+
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Dashboard</span>
+    <div class="topbar-actions">
+      <button class="btn btn-teams" onclick="sendTeamsReminder()" id="btn-teams">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M19.5 4h-1.75a.75.75 0 0 0 0 1.5H19.5V19.5h-1.75a.75.75 0 0 0 0 1.5h1.75A1.5 1.5 0 0 0 21 19.5v-14A1.5 1.5 0 0 0 19.5 4zM4.5 4a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 4.5 21h1.75a.75.75 0 0 0 0-1.5H4.5V5.5h1.75a.75.75 0 0 0 0-1.5H4.5z"/></svg>
+        Opomnik Teams
+      </button>
+      <button class="btn btn-primary" onclick="showView('new-service')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nov servis
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div id="dash-alerts"></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">&#128308; Aktivni servisi</span>
+            <button class="btn btn-secondary btn-sm" onclick="showView('services')">Vsi servisi</button>
+          </div>
+          <div class="table-wrap"><div id="dash-active-table"></div></div>
+        </div>
+        <div>
+          <div class="card mb-2">
+            <div class="card-header"><span class="card-title">&#128200; Najbolj servisiralo</span></div>
+            <div id="top-devices"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">&#128202; SLA statistika</span></div>
+            <div id="sla-stats"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOV SERVIS -->
+    <div id="view-new-service" class="view">
+      <div class="section-hdr"><h2 class="section-title">Nov servisni nalog</h2></div>
+      <div class="card" style="max-width:640px">
+        <form id="new-service-form" onsubmit="submitNewService(event)">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Serijska številka terminala *</label>
+              <div class="sn-wrap">
+                <input type="text" id="sn-input" placeholder="Poišči SN..." autocomplete="off" oninput="filterSNs()" onfocus="openSNDrop()" required>
+                <div class="sn-drop" id="sn-drop"></div>
+              </div>
+              <input type="hidden" id="sn-selected">
+            </div>
+            <div class="form-group full">
+              <label>Vrsta servisa *</label>
+              <div class="radio-group">
+                <div class="radio-opt">
+                  <input type="radio" name="svc-type" id="type-hw" value="hardware" checked onchange="updateDueDate()">
+                  <label for="type-hw">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-2a2 2 0 0 0-2 2v2"/><path d="M8 3h2a2 2 0 0 1 2 2v2"/></svg>
+                    Hardware
+                  </label>
+                </div>
+                <div class="radio-opt">
+                  <input type="radio" name="svc-type" id="type-sw" value="software" onchange="updateDueDate()">
+                  <label for="type-sw">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    Software
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label>Prioriteta</label>
+              <div class="radio-group">
+                <div class="radio-opt"><input type="radio" name="priority" id="pri-normal" value="normal" checked><label for="pri-normal">&#128309; Normalno</label></div>
+                <div class="radio-opt"><input type="radio" name="priority" id="pri-urgent" value="urgent"><label for="pri-urgent">&#128308; Nujno</label></div>
+                <div class="radio-opt"><input type="radio" name="priority" id="pri-low" value="low"><label for="pri-low">&#128994; Nizko</label></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Datum zahteve *</label>
+              <input type="date" id="req-date" required oninput="updateDueDate()">
+            </div>
+            <div class="form-group">
+              <label>Datum prevzema</label>
+              <input type="date" id="recv-date" oninput="updateDueDate()">
+            </div>
+            <div class="form-group">
+              <label>Rok za zaključek (avto)</label>
+              <input type="date" id="due-date" readonly>
+              <span class="input-hint" id="due-hint">Izračunano iz datuma prevzema</span>
+            </div>
+            <div class="form-group">
+              <label>Lokacija terminala</label>
+              <input type="text" id="location" placeholder="Npr. Postaja Ljubljana">
+            </div>
+            <div class="form-group">
+              <label>Servisni partner</label>
+              <input type="text" id="partner" placeholder="Npr. Nexgo SI d.o.o.">
+            </div>
+            <div class="form-group full">
+              <label>Opis napake *</label>
+              <textarea id="error-desc" placeholder="Opisi simptome, napako ali zahtevo za posodobitev..." required></textarea>
+            </div>
+            <div class="form-group full">
+              <label>Interni komentar tehnika</label>
+              <textarea id="tech-notes" placeholder="Interni zapisi..."></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
+            <button type="button" class="btn btn-secondary" onclick="resetNewServiceForm()">Prekliči</button>
+            <button type="submit" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+              Shrani servis
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- VSI SERVISI -->
+    <div id="view-services" class="view">
+      <div class="section-hdr">
+        <h2 class="section-title">Vsi servisi</h2>
+        <button class="btn btn-secondary btn-sm" onclick="exportData()">&#128190; Izvozi JSON</button>
+      </div>
+      <div class="card">
+        <div class="filters">
+          <input type="text" id="f-search" placeholder="Išči SN, partner..." oninput="renderServicesList()">
+          <select id="f-status" onchange="renderServicesList()">
+            <option value="">Vsi statusi</option>
+            <option value="active">Aktivni</option>
+            <option value="overdue">Po roku</option>
+            <option value="due-soon">Rok bližanje</option>
+            <option value="returned">Vrnjeni</option>
+          </select>
+          <select id="f-type" onchange="renderServicesList()">
+            <option value="">Vse vrste</option>
+            <option value="hardware">Hardware</option>
+            <option value="software">Software</option>
+          </select>
+          <select id="f-priority" onchange="renderServicesList()">
+            <option value="">Vse prioritete</option>
+            <option value="urgent">Nujno</option>
+            <option value="normal">Normalno</option>
+            <option value="low">Nizko</option>
+          </select>
+        </div>
+        <div id="services-table"></div>
+      </div>
+    </div>
+
+    <!-- NAPRAVE -->
+    <div id="view-devices" class="view">
+      <div class="section-hdr">
+        <h2 class="section-title">Vse naprave (520)</h2>
+      </div>
+      <div class="card">
+        <div class="filters" style="margin-bottom:14px">
+          <input type="text" id="dev-search" placeholder="Išči SN..." oninput="renderDevicesList()">
+          <select id="dev-filter" onchange="renderDevicesList()">
+            <option value="">Vse naprave</option>
+            <option value="on-service">Na servisu</option>
+            <option value="serviced">Kož servisiralo</option>
+            <option value="never">Nikoli na servisu</option>
+          </select>
+        </div>
+        <div id="devices-table"></div>
+      </div>
+    </div>
+
+    <!-- NASTAVITVE -->
+    <div id="view-settings" class="view">
+      <div class="section-hdr"><h2 class="section-title">Nastavitve</h2></div>
+      <div style="max-width:600px">
+        <div class="card mb-2">
+          <div class="settings-section">
+            <h3>&#9201; Roki za servis</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Hardware – rok (dni)</label>
+                <input type="number" id="set-hw-days" min="1" max="365" value="14">
+                <span class="input-hint">Privzeto: 14 dni od prevzema</span>
+              </div>
+              <div class="form-group">
+                <label>Software – rok (dni)</label>
+                <input type="number" id="set-sw-days" min="1" max="365" value="7">
+                <span class="input-hint">Privzeto: 7 dni od prevzema</span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>&#128276; Teams opomnik</h3>
+            <div class="form-group mb-2">
+              <label>Teams Incoming Webhook URL</label>
+              <input type="url" id="set-teams-url" placeholder="https://outlook.office.com/webhook/...">
+              <span class="input-hint">Ustvari Incoming Webhook v Teams kanalu &rarr; Connectors</span>
+            </div>
+            <div class="form-group mb-2">
+              <label>Opomnik X dni pred rokom</label>
+              <input type="number" id="set-reminder-days" min="0" max="30" value="2">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            Shrani nastavitve
+          </button>
+        </div>
+        <div class="card">
+          <div class="settings-section">
+            <h3>&#128190; Varnostna kopija</h3>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-secondary" onclick="exportData()">&#11015; Izvozi vse podatke (JSON)</button>
+              <label class="btn btn-secondary" style="cursor:pointer">
+                &#11014; Uvozi podatke (JSON)
+                <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+              </label>
+            </div>
+            <p class="input-hint" style="margin-top:8px">Podatki so shranjeni v vašem brskalniku (IndexedDB). Redno izvozite za varnostno kopijo.</p>
+          </div>
+          <div class="settings-section" style="margin-bottom:0">
+            <h3>&#128736; Sistem</h3>
+            <button class="btn btn-danger btn-sm" onclick="confirmReset()">Izbriši vse podatke</button>
+            <span class="input-hint" style="margin-left:10px">Nepopravljiva akcija!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL: Podrobnosti servisa -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>&#128295; Podrobnosti servisnega naloga</h3>
+      <button class="close-x" onclick="closeModal('modal-detail')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="modal-detail-body"></div>
+    <div class="modal-footer" id="modal-detail-footer"></div>
+  </div>
+</div>
+
+<!-- MODAL: Zgodovina naprave -->
+<div class="modal-overlay" id="modal-history">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="history-title">Zgodovina naprave</h3>
+      <button class="close-x" onclick="closeModal('modal-history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="modal-history-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: Vrni terminal -->
+<div class="modal-overlay" id="modal-return">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <h3>Označi kot vrnjen</h3>
+      <button class="close-x" onclick="closeModal('modal-return')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group mb-2">
+        <label>Datum vrnitve *</label>
+        <input type="date" id="return-date">
+      </div>
+      <div class="form-group">
+        <label>Komentar ob vrnitvi</label>
+        <textarea id="return-note" placeholder="Kaj je bilo narejeno, opombe..."></textarea>
+      </div>
+      <input type="hidden" id="return-service-id">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-return')">Prekliči</button>
+      <button class="btn btn-success" onclick="confirmReturn()">&#10003; Potrdi vrnitev</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none"></div>
+
+<script>
+// ============================================================
+// DEVICE LIST — 520 serijskih številk
+// ============================================================
+const ALL_DEVICES = ["N860W808544", "N860W808545", "N860W808536", "N860W808540", "N860W808543", "N860W813906", "N860W813902", "N860W813914", "N860W813910", "N860W813915", "N860W813903", "N860W813911", "N860W813907", "N860W813916", "N860W813904", "N860W813912", "N860W813908", "N860W813917", "N860W813905", "N860W813913", "N860W813909", "N860W813918", "N860W813922", "N860W813926", "N860W813930", "N860W813919", "N860W813923", "N860W813927", "N860W813931", "N860W813920", "N860W813924", "N860W813928", "N860W813932", "N860W813921", "N860W813925", "N860W813933", "N860W813934", "N860W813929", "N860W813938", "N860W813942", "N860W813935", "N860W813946", "N860W813939", "N860W813943", "N860W813936", "N860W813947", "N860W813940", "N860W813937", "N860W813944", "N860W813941", "N860W813948", "N860W813950", "N860W813945", "N860W813954", "N860W813949", "N860W813951", "N860W813958", "N860W813955", "N860W813962", "N860W813952", "N860W813959", "N860W813956", "N860W813963", "N860W813953", "N860W813960", "N860W813957", "N860W813964", "N860W813966", "N860W813961", "N860W813970", "N860W813965", "N860W813967", "N860W813974", "N860W813971", "N860W813978", "N860W813968", "N860W813975", "N860W813972", "N860W813979", "N860W813969", "N860W813976", "N860W813973", "N860W813980", "N860W813982", "N860W813977", "N860W813986", "N860W813981", "N860W813983", "N860W813990", "N860W813987", "N860W813994", "N860W813984", "N860W813991", "N860W813988", "N860W813995", "N860W813985", "N860W813992", "N860W813989", "N860W813996", "N860W813998", "N860W813993", "N860W814002", "N860W813997", "N860W814006", "N860W813999", "N860W814003", "N860W814010", "N860W814007", "N860W814000", "N860W814004", "N860W814011", "N860W814008", "N860W814001", "N860W814005", "N860W814012", "N860W814009", "N860W814014", "N860W814018", "N860W814013", "N860W814022", "N860W814015", "N860W814019", "N860W814026", "N860W814023", "N860W814016", "N860W814020", "N860W814027", "N860W814024", "N860W814017", "N860W814021", "N860W814028", "N860W814025", "N860W814030", "N860W814034", "N860W814029", "N860W814031", "N860W814038", "N860W814035", "N860W814042", "N860W814032", "N860W814039", "N860W814043", "N860W814036", "N860W814033", "N860W814040", "N860W814037", "N860W814046", "N860W814044", "N860W814041", "N860W814050", "N860W814047", "N860W814054", "N860W814045", "N860W814051", "N860W814048", "N860W814055", "N860W814058", "N860W814052", "N860W814049", "N860W814056", "N860W814059", "N860W814053", "N860W814062", "N860W814057", "N860W814060", "N860W814066", "N860W814063", "N860W814070", "N860W814061", "N860W814067", "N860W814064", "N860W814071", "N860W814074", "N860W814068", "N860W814065", "N860W814072", "N860W814075", "N860W814069", "N860W814078", "N860W814073", "N860W814076", "N860W814082", "N860W814086", "N860W814079", "N860W814077", "N860W814083", "N860W814087", "N860W814090", "N860W814080", "N860W814084", "N860W814088", "N860W814081", "N860W814085", "N860W814091", "N860W814089", "N860W814094", "N860W814098", "N860W814092", "N860W814102", "N860W814095", "N860W814099", "N860W814103", "N860W814096", "N860W814093", "N860W814100", "N860W814104", "N860W814097", "N860W814101", "N860W814106", "N860W814105", "N860W814110", "N860W814107", "N860W814114", "N860W814118", "N860W814111", "N860W814108", "N860W814115", "N860W814119", "N860W814112", "N860W814109", "N860W814116", "N860W814120", "N860W814113", "N860W814122", "N860W814117", "N860W814121", "N860W814126", "N860W814123", "N860W814130", "N860W814134", "N860W814127", "N860W814124", "N860W814131", "N860W814135", "N860W814128", "N860W814125", "N860W814132", "N860W814136", "N860W814129", "N860W814138", "N860W814133", "N860W814137", "N860W814142", "N860W814139", "N860W814146", "N860W814150", "N860W814143", "N860W814140", "N860W814147", "N860W814151", "N860W814144", "N860W814141", "N860W814148", "N860W814152", "N860W814145", "N860W814154", "N860W814149", "N860W814153", "N860W814158", "N860W814155", "N860W814162", "N860W814166", "N860W814159", "N860W814156", "N860W814163", "N860W814167", "N860W814160", "N860W814157", "N860W814164", "N860W814168", "N860W814170", "N860W814161", "N860W814165", "N860W814169", "N860W814171", "N860W814174", "N860W814178", "N860W814182", "N860W814172", "N860W814175", "N860W814179", "N860W814183", "N860W814173", "N860W814176", "N860W814180", "N860W814184", "N860W814186", "N860W814177", "N860W814181", "N860W814185", "N860W814187", "N860W814190", "N860W814194", "N860W814198", "N860W814188", "N860W814191", "N860W814195", "N860W814199", "N860W814189", "N860W814192", "N860W814196", "N860W814200", "N860W814202", "N860W814193", "N860W814197", "N860W814201", "N860W814203", "N860W814206", "N860W814210", "N860W814214", "N860W814204", "N860W814207", "N860W814211", "N860W814215", "N860W814205", "N860W814208", "N860W814212", "N860W814216", "N860W814218", "N860W814209", "N860W814213", "N860W814217", "N860W814219", "N860W814222", "N860W814226", "N860W814230", "N860W814220", "N860W814223", "N860W814227", "N860W814231", "N860W814221", "N860W814224", "N860W814228", "N860W814232", "N860W814234", "N860W814225", "N860W814229", "N860W814233", "N860W814235", "N860W814238", "N860W814242", "N860W814246", "N860W814236", "N860W814239", "N860W814243", "N860W814247", "N860W814237", "N860W814240", "N860W814244", "N860W814248", "N860W814250", "N860W814241", "N860W814245", "N860W814249", "N860W814251", "N860W814254", "N860W814258", "N860W814262", "N860W814252", "N860W814255", "N860W814259", "N860W814263", "N860W814253", "N860W814256", "N860W814260", "N860W814264", "N860W814266", "N860W814257", "N860W814261", "N860W814265", "N860W814267", "N860W814270", "N860W814274", "N860W814278", "N860W814268", "N860W814271", "N860W814275", "N860W814279", "N860W814269", "N860W814272", "N860W814276", "N860W814280", "N860W814282", "N860W814273", "N860W814277", "N860W814281", "N860W814283", "N860W814286", "N860W814290", "N860W814294", "N860W814284", "N860W814287", "N860W814291", "N860W814295", "N860W814285", "N860W814288", "N860W814292", "N860W814296", "N860W814298", "N860W814289", "N860W814293", "N860W814297", "N860W814299", "N860W814302", "N860W814310", "N860W814300", "N860W814306", "N860W814303", "N860W814311", "N860W814307", "N860W814301", "N860W814304", "N860W814312", "N860W814308", "N860W814314", "N860W814305", "N860W814313", "N860W814309", "N860W814315", "N860W814318", "N860W814322", "N860W814326", "N860W814316", "N860W814319", "N860W814323", "N860W814327", "N860W814317", "N860W814320", "N860W814324", "N860W814328", "N860W814325", "N860W814330", "N860W814329", "N860W814321", "N860W814334", "N860W814331", "N860W814342", "N860W814338", "N860W814335", "N860W814332", "N860W814343", "N860W814339", "N860W814336", "N860W814333", "N860W814344", "N860W814340", "N860W814337", "N860W814346", "N860W814345", "N860W814341", "N860W814350", "N860W814347", "N860W814354", "N860W814358", "N860W814351", "N860W814348", "N860W814355", "N860W814359", "N860W814352", "N860W814349", "N860W814356", "N860W814360", "N860W814353", "N860W814362", "N860W814357", "N860W814361", "N860W814366", "N860W814363", "N860W814370", "N860W814374", "N860W814367", "N860W814364", "N860W814371", "N860W814375", "N860W814368", "N860W814365", "N860W814372", "N860W814376", "N860W814369", "N860W814378", "N860W814373", "N860W814377", "N860W814382", "N860W814379", "N860W814386", "N860W814390", "N860W814383", "N860W814380", "N860W814387", "N860W814391", "N860W814384", "N860W814381", "N860W814388", "N860W814392", "N860W814385", "N860W814394", "N860W814389", "N860W814393", "N860W814395", "N860W814396", "N860W814397", "N860W814401", "N860W814405", "N860W814409", "N860W814398", "N860W814410", "N860W814406", "N860W814402", "N860W814399", "N860W814403", "N860W814407", "N860W814411", "N860W814400", "N860W814404", "N860W814412", "N860W814408", "N860W814413", "N860W814414", "N860W814415", "N860W814416"];
+
+// ============================================================
+// INDEXEDDB
+// ============================================================
+let db;
+const DB_NAME = 'ServisMT_v1';
+const DB_VER = 1;
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('services')) {
+        const s = d.createObjectStore('services', {keyPath:'id'});
+        s.createIndex('sn','serialNumber',{unique:false});
+        s.createIndex('status','status',{unique:false});
+      }
+      if (!d.objectStoreNames.contains('settings')) {
+        d.createObjectStore('settings', {keyPath:'key'});
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(); };
+    req.onerror = e => reject(e);
+  });
+}
+
+function dbGet(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store,'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = reject;
+  });
+}
+
+function dbPut(store, item) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store,'readwrite');
+    const req = tx.objectStore(store).put(item);
+    req.onsuccess = () => resolve();
+    req.onerror = reject;
+  });
+}
+
+function dbDelete(store, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store,'readwrite');
+    const req = tx.objectStore(store).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = reject;
+  });
+}
+
+function dbClear(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store,'readwrite');
+    const req = tx.objectStore(store).clear();
+    req.onsuccess = () => resolve();
+    req.onerror = reject;
+  });
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+let settings = { hwDays:14, swDays:7, teamsUrl:'', reminderDays:2 };
+
+async function loadSettings() {
+  const rows = await dbGet('settings');
+  rows.forEach(r => { settings[r.key] = r.value; });
+  document.getElementById('set-hw-days').value = settings.hwDays || 14;
+  document.getElementById('set-sw-days').value = settings.swDays || 7;
+  document.getElementById('set-teams-url').value = settings.teamsUrl || '';
+  document.getElementById('set-reminder-days').value = settings.reminderDays || 2;
+}
+
+async function saveSettings() {
+  settings.hwDays = parseInt(document.getElementById('set-hw-days').value) || 14;
+  settings.swDays = parseInt(document.getElementById('set-sw-days').value) || 7;
+  settings.teamsUrl = document.getElementById('set-teams-url').value.trim();
+  settings.reminderDays = parseInt(document.getElementById('set-reminder-days').value) || 2;
+  await dbPut('settings',{key:'hwDays',value:settings.hwDays});
+  await dbPut('settings',{key:'swDays',value:settings.swDays});
+  await dbPut('settings',{key:'teamsUrl',value:settings.teamsUrl});
+  await dbPut('settings',{key:'reminderDays',value:settings.reminderDays});
+  toast('Nastavitve shranjene','green');
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function uuid() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2,9);
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function fmt(d) {
+  if (!d) return '—';
+  const [y,m,dd] = d.split('-');
+  return dd+'.'+m+'.'+y;
+}
+
+function daysDiff(d1, d2) {
+  return Math.round((new Date(d2)-new Date(d1))/(1000*60*60*24));
+}
+
+function addDays(d, n) {
+  const dt = new Date(d);
+  dt.setDate(dt.getDate()+n);
+  return dt.toISOString().split('T')[0];
+}
+
+function getStatus(svc) {
+  if (svc.status === 'returned') return 'returned';
+  const t = today();
+  if (!svc.dueDate) return 'active';
+  const diff = daysDiff(t, svc.dueDate);
+  if (diff < 0) return 'overdue';
+  if (diff <= (settings.reminderDays || 2)) return 'due-soon';
+  return 'active';
+}
+
+function statusBadge(svc) {
+  const s = getStatus(svc);
+  if (s === 'returned') return '<span class="badge b-green">Vrnjen</span>';
+  if (s === 'overdue') {
+    const d = daysDiff(svc.dueDate, today());
+    return '<span class="badge b-red">Po roku ('+d+' dni)</span>';
+  }
+  if (s === 'due-soon') {
+    const d = daysDiff(today(), svc.dueDate);
+    return '<span class="badge b-amber">Rok v '+d+' dnih</span>';
+  }
+  return '<span class="badge b-blue">Aktiven</span>';
+}
+
+function typeBadge(t) {
+  return t === 'hardware'
+    ? '<span class="badge b-purple">Hardware</span>'
+    : '<span class="badge b-blue">Software</span>';
+}
+
+function priBadge(p) {
+  if (p === 'urgent') return '<span class="badge b-red">&#128308; Nujno</span>';
+  if (p === 'low') return '<span class="badge b-gray">&#128994; Nizko</span>';
+  return '<span class="badge b-blue">&#128309; Normalno</span>';
+}
+
+function toast(msg, color='blue') {
+  const c = {blue:'#2563eb',green:'#16a34a',red:'#dc2626',amber:'#d97706'};
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.style.cssText = 'background:'+c[color]+';color:#fff;padding:10px 16px;border-radius:8px;font-size:.83rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.2);opacity:1;transition:opacity .4s;pointer-events:all';
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),400); },3000);
+}
+
+// ============================================================
+// SN SELECTOR
+// ============================================================
+let activeSNs = new Set(); // SNs currently on active service
+
+function openSNDrop() {
+  filterSNs();
+  document.getElementById('sn-drop').classList.add('open');
+  document.addEventListener('click', closeSNDropOut);
+}
+
+function closeSNDropOut(e) {
+  if (!e.target.closest('.sn-wrap')) {
+    document.getElementById('sn-drop').classList.remove('open');
+    document.removeEventListener('click', closeSNDropOut);
+  }
+}
+
+function filterSNs() {
+  const q = document.getElementById('sn-input').value.trim().toUpperCase();
+  const drop = document.getElementById('sn-drop');
+  const available = ALL_DEVICES.filter(sn => !activeSNs.has(sn) && sn.includes(q));
+  if (available.length === 0) {
+    drop.innerHTML = '<div class="sn-empty">Ni zadetkov ali SN je že na servisu</div>';
+  } else {
+    drop.innerHTML = available.slice(0,50).map(sn =>
+      '<div class="sn-opt" onclick="selectSN(''+sn+'')">'+sn+'</div>'
+    ).join('') + (available.length>50 ? '<div class="sn-empty">Zoži iskanje...</div>' : '');
+  }
+  drop.classList.add('open');
+}
+
+function selectSN(sn) {
+  document.getElementById('sn-input').value = sn;
+  document.getElementById('sn-selected').value = sn;
+  document.getElementById('sn-drop').classList.remove('open');
+}
+
+// ============================================================
+// DUE DATE CALCULATION
+// ============================================================
+function updateDueDate() {
+  const recv = document.getElementById('recv-date').value || document.getElementById('req-date').value;
+  const type = document.querySelector('input[name="svc-type"]:checked')?.value;
+  if (!recv) { document.getElementById('due-date').value=''; return; }
+  const days = type === 'software' ? (settings.swDays||7) : (settings.hwDays||14);
+  const due = addDays(recv, days);
+  document.getElementById('due-date').value = due;
+  document.getElementById('due-hint').textContent =
+    'Rok: prevzem + '+days+' dni ('+fmt(due)+')';
+}
+
+// ============================================================
+// NEW SERVICE
+// ============================================================
+async function submitNewService(e) {
+  e.preventDefault();
+  const sn = document.getElementById('sn-selected').value;
+  if (!sn) { toast('Izberi serijsko številko!','amber'); return; }
+  const type = document.querySelector('input[name="svc-type"]:checked').value;
+  const priority = document.querySelector('input[name="priority"]:checked').value;
+  const reqDate = document.getElementById('req-date').value;
+  const recvDate = document.getElementById('recv-date').value;
+  const dueDate = document.getElementById('due-date').value;
+  const location = document.getElementById('location').value.trim();
+  const partner = document.getElementById('partner').value.trim();
+  const errorDesc = document.getElementById('error-desc').value.trim();
+  const techNotes = document.getElementById('tech-notes').value.trim();
+
+  const svc = {
+    id: uuid(),
+    serialNumber: sn,
+    serviceType: type,
+    priority,
+    status: 'active',
+    requestDate: reqDate,
+    receivedDate: recvDate,
+    dueDate,
+    returnedDate: null,
+    returnNote: '',
+    location,
+    servicePartner: partner,
+    errorDescription: errorDesc,
+    technicianNotes: techNotes,
+    createdAt: Date.now()
+  };
+
+  await dbPut('services', svc);
+  activeSNs.add(sn);
+  toast('Servis shranjen: '+sn,'green');
+  resetNewServiceForm();
+  showView('dashboard');
+  await refreshAll();
+}
+
+function resetNewServiceForm() {
+  document.getElementById('new-service-form').reset();
+  document.getElementById('sn-selected').value='';
+  document.getElementById('due-date').value='';
+  document.getElementById('due-hint').textContent='Izračunano iz datuma prevzema';
+  document.getElementById('req-date').value = today();
+}
+
+// ============================================================
+// RETURN SERVICE
+// ============================================================
+function openReturnModal(id) {
+  document.getElementById('return-service-id').value = id;
+  document.getElementById('return-date').value = today();
+  document.getElementById('return-note').value = '';
+  closeModal('modal-detail');
+  openModal('modal-return');
+}
+
+async function confirmReturn() {
+  const id = document.getElementById('return-service-id').value;
+  const returnDate = document.getElementById('return-date').value;
+  if (!returnDate) { toast('Vnesi datum vrnitve!','amber'); return; }
+  const services = await dbGet('services');
+  const svc = services.find(s=>s.id===id);
+  if (!svc) return;
+  svc.status = 'returned';
+  svc.returnedDate = returnDate;
+  svc.returnNote = document.getElementById('return-note').value.trim();
+  await dbPut('services', svc);
+  activeSNs.delete(svc.serialNumber);
+  closeModal('modal-return');
+  toast('Terminal vrnjen: '+svc.serialNumber,'green');
+  await refreshAll();
+}
+
+// ============================================================
+// DELETE SERVICE
+// ============================================================
+async function deleteService(id) {
+  if (!confirm('Res izbrisati ta servisni nalog?')) return;
+  const services = await dbGet('services');
+  const svc = services.find(s=>s.id===id);
+  if (svc) activeSNs.delete(svc.serialNumber);
+  await dbDelete('services', id);
+  closeModal('modal-detail');
+  toast('Servis izbrisan','red');
+  await refreshAll();
+  // rebuild activeSNs in case of corner case
+  await buildActiveSNs();
+}
+
+async function buildActiveSNs() {
+  const services = await dbGet('services');
+  activeSNs.clear();
+  services.filter(s=>s.status==='active').forEach(s=>activeSNs.add(s.serialNumber));
+}
+
+// ============================================================
+// DETAIL MODAL
+// ============================================================
+async function openDetailModal(id) {
+  const services = await dbGet('services');
+  const svc = services.find(s=>s.id===id);
+  if (!svc) return;
+  const st = getStatus(svc);
+  const body = document.getElementById('modal-detail-body');
+  const isActive = svc.status === 'active';
+
+  let daysLeft = '';
+  if (isActive && svc.dueDate) {
+    const d = daysDiff(today(), svc.dueDate);
+    daysLeft = d < 0
+      ? '<span class="text-red font-bold">'+Math.abs(d)+' dni po roku!</span>'
+      : '<span class="'+(d<=2?'text-amber':'text-green')+' font-bold">'+d+' dni preostalo</span>';
+  }
+
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div><div class="text-xs text-gray mb-1">Serijska številka</div><div class="font-mono font-bold" style="font-size:1.05rem">${svc.serialNumber}</div></div>
+      <div><div class="text-xs text-gray mb-1">Status</div>${statusBadge(svc)}</div>
+      <div><div class="text-xs text-gray mb-1">Vrsta servisa</div>${typeBadge(svc.serviceType)}</div>
+      <div><div class="text-xs text-gray mb-1">Prioriteta</div>${priBadge(svc.priority)}</div>
+      <div><div class="text-xs text-gray mb-1">Datum zahteve</div>${fmt(svc.requestDate)}</div>
+      <div><div class="text-xs text-gray mb-1">Datum prevzema</div>${fmt(svc.receivedDate)}</div>
+      <div><div class="text-xs text-gray mb-1">Rok zaključka</div>${fmt(svc.dueDate)} ${daysLeft}</div>
+      <div><div class="text-xs text-gray mb-1">Datum vrnitve</div>${fmt(svc.returnedDate)}</div>
+      <div><div class="text-xs text-gray mb-1">Lokacija</div>${svc.location||'—'}</div>
+      <div><div class="text-xs text-gray mb-1">Servisni partner</div>${svc.servicePartner||'—'}</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="text-xs text-gray mb-1">Opis napake</div>
+      <div style="background:#f8fafc;border-radius:7px;padding:10px;font-size:.83rem;line-height:1.5">${svc.errorDescription||'—'}</div>
+    </div>
+    ${svc.technicianNotes ? `<div style="margin-bottom:14px"><div class="text-xs text-gray mb-1">Komentar tehnika</div><div style="background:#f8fafc;border-radius:7px;padding:10px;font-size:.83rem;line-height:1.5">${svc.technicianNotes}</div></div>` : ''}
+    ${svc.returnNote ? `<div><div class="text-xs text-gray mb-1">Komentar ob vrnitvi</div><div style="background:#f8fafc;border-radius:7px;padding:10px;font-size:.83rem">${svc.returnNote}</div></div>` : ''}
+  `;
+
+  const footer = document.getElementById('modal-detail-footer');
+  footer.innerHTML = `
+    <button class="btn btn-danger btn-sm" onclick="deleteService('${svc.id}')">Izbriši</button>
+    <button class="btn btn-secondary" onclick="showDeviceHistory('${svc.serialNumber}')">Zgodovina naprave</button>
+    ${isActive ? `<button class="btn btn-success" onclick="openReturnModal('${svc.id}')">&#10003; Označi kot vrnjen</button>` : ''}
+  `;
+  openModal('modal-detail');
+}
+
+// ============================================================
+// DEVICE HISTORY
+// ============================================================
+async function showDeviceHistory(sn) {
+  closeModal('modal-detail');
+  const services = await dbGet('services');
+  const history = services.filter(s=>s.serialNumber===sn).sort((a,b)=>b.createdAt-a.createdAt);
+  document.getElementById('history-title').textContent = '&#128295; Zgodovina: '+sn;
+
+  // Check for recurring issues (3+ in 12 months)
+  const year = Date.now() - 365*24*60*60*1000;
+  const recent = history.filter(s=>s.createdAt>year);
+  let warnHtml = '';
+  if (recent.length >= 3) {
+    warnHtml = `<div class="warn-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span><b>Ponavljajoče se napake:</b> Ta naprava je bila v zadnjih 12 mesecih ${recent.length}x na servisu. Priporočamo pregled ali zamenjavo.</span></div>`;
+  }
+
+  const body = document.getElementById('modal-history-body');
+  if (history.length === 0) {
+    body.innerHTML = warnHtml + '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Naprava še ni bila na servisu.</p></div>';
+  } else {
+    body.innerHTML = warnHtml + `
+      <div style="margin-bottom:14px;font-size:.82rem;color:#64748b">${history.length} servisnih nalogov skupaj</div>
+      <div class="timeline">${history.map(s=>{
+        const st=getStatus(s);
+        const dot = s.status==='returned' ? 'tl-dot-green' : (st==='overdue'?'tl-dot-red':'tl-dot-blue');
+        return `<div class="tl-item">
+          <div class="tl-dot ${dot}" style="margin-top:5px"></div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-weight:700;font-size:.85rem">${fmt(s.requestDate)}</span>
+              <span>${typeBadge(s.serviceType)} ${statusBadge(s)}</span>
+            </div>
+            <div style="font-size:.8rem;color:#64748b;margin-bottom:4px">
+              Prevzem: ${fmt(s.receivedDate)} &bull; Rok: ${fmt(s.dueDate)} &bull; Vrnjen: ${fmt(s.returnedDate)}
+            </div>
+            <div style="font-size:.82rem;background:#f8fafc;border-radius:6px;padding:7px;margin-top:6px">${s.errorDescription||'—'}</div>
+            ${s.returnNote?`<div style="font-size:.78rem;color:#64748b;margin-top:4px;padding:0 7px">&#8617; ${s.returnNote}</div>`:''}
+          </div>
+          <div><button class="btn-icon" onclick="openDetailModal('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button></div>
+        </div>`;
+      }).join('')}</div>
+    `;
+  }
+  openModal('modal-history');
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function renderDashboard() {
+  const services = await dbGet('services');
+  const t = today();
+
+  const active = services.filter(s=>s.status==='active');
+  const overdue = active.filter(s=>getStatus(s)==='overdue');
+  const dueSoon = active.filter(s=>getStatus(s)==='due-soon');
+  const returnedThisMonth = services.filter(s=>{
+    if (s.status!=='returned'||!s.returnedDate) return false;
+    return s.returnedDate.startsWith(t.substr(0,7));
+  });
+
+  // Stats
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-icon si-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div><div class="stat-value">${active.length}</div><div class="stat-label">Aktivnih servisov</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="stat-value">${overdue.length}</div><div class="stat-label">Po roku</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="stat-value">${dueSoon.length}</div><div class="stat-label">Rok v ${settings.reminderDays||2} dnih</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="stat-value">${returnedThisMonth.length}</div><div class="stat-label">Vrnjenih ta mesec</div></div></div>
+  `;
+
+  // Alerts
+  let alerts = '';
+  if (overdue.length > 0) alerts += `<div class="alert alert-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span><b>${overdue.length} servisov po roku!</b> Prosimo ukrepaj takoj.</span></div>`;
+  if (dueSoon.length > 0) alerts += `<div class="alert alert-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span><b>${dueSoon.length} servisov se izteka v ${settings.reminderDays||2} dnih.</b></span></div>`;
+  document.getElementById('dash-alerts').innerHTML = alerts;
+
+  // Active table
+  const sortedActive = [...active].sort((a,b)=>{
+    const order = {'overdue':0,'due-soon':1,'active':2};
+    return (order[getStatus(a)]||2)-(order[getStatus(b)]||2);
+  }).slice(0,15);
+
+  if (sortedActive.length === 0) {
+    document.getElementById('dash-active-table').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg><p>Ni aktivnih servisov. Odlično!</p></div>';
+  } else {
+    document.getElementById('dash-active-table').innerHTML = `
+      <table><thead><tr><th>SN</th><th>Tip</th><th>Zahteva</th><th>Rok</th><th>Status</th><th></th></tr></thead>
+      <tbody>${sortedActive.map(s=>`<tr>
+        <td class="font-mono">${s.serialNumber}</td>
+        <td>${typeBadge(s.serviceType)}</td>
+        <td class="text-sm text-gray">${fmt(s.requestDate)}</td>
+        <td class="text-sm">${fmt(s.dueDate)}</td>
+        <td>${statusBadge(s)}</td>
+        <td><button class="btn-icon" onclick="openDetailModal('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button></td>
+      </tr>`).join('')}</tbody></table>
+    `;
+  }
+
+  // Top devices
+  const countBySN = {};
+  services.forEach(s=>{ countBySN[s.serialNumber]=(countBySN[s.serialNumber]||0)+1; });
+  const top = Object.entries(countBySN).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxCount = top.length ? top[0][1] : 1;
+  if (top.length === 0 || top[0][1] < 2) {
+    document.getElementById('top-devices').innerHTML = '<div class="empty-state" style="padding:20px 0"><p>Še ni dovolj podatkov.</p></div>';
+  } else {
+    document.getElementById('top-devices').innerHTML = top.map(([sn,cnt])=>`
+      <div class="top-dev-row">
+        <div style="flex:1">
+          <div class="font-mono text-sm" style="cursor:pointer;color:#2563eb" onclick="showDeviceHistory('${sn}')">${sn}</div>
+          <div class="top-dev-bar"><div class="top-dev-fill" style="width:${(cnt/maxCount*100).toFixed(0)}%"></div></div>
+        </div>
+        <span class="badge b-blue" style="margin-left:10px">${cnt}x</span>
+      </div>
+    `).join('');
+  }
+
+  // SLA
+  const done = services.filter(s=>s.status==='returned'&&s.dueDate&&s.returnedDate);
+  const onTime = done.filter(s=>s.returnedDate<=s.dueDate).length;
+  const slaPC = done.length ? Math.round(onTime/done.length*100) : null;
+  const avgDays = done.length ? (done.reduce((acc,s)=>acc+daysDiff(s.requestDate,s.returnedDate),0)/done.length).toFixed(1) : null;
+  document.getElementById('sla-stats').innerHTML = `
+    <div class="sla-grid">
+      <div class="sla-card"><div class="sla-val" style="color:${slaPC===null?'#94a3b8':slaPC>=80?'#16a34a':slaPC>=60?'#d97706':'#dc2626'}">${slaPC===null?'—':slaPC+'%'}</div><div class="sla-lbl">V roku</div></div>
+      <div class="sla-card"><div class="sla-val">${done.length}</div><div class="sla-lbl">Zaključeni</div></div>
+      <div class="sla-card"><div class="sla-val">${avgDays||'—'}</div><div class="sla-lbl">Povp. dni</div></div>
+    </div>
+  `;
+}
+
+// ============================================================
+// SERVICES LIST
+// ============================================================
+async function renderServicesList() {
+  const services = await dbGet('services');
+  const q = (document.getElementById('f-search')?.value||'').trim().toUpperCase();
+  const fStatus = document.getElementById('f-status')?.value||'';
+  const fType = document.getElementById('f-type')?.value||'';
+  const fPri = document.getElementById('f-priority')?.value||'';
+
+  let filtered = services;
+  if (q) filtered = filtered.filter(s=>s.serialNumber.includes(q)||(s.servicePartner||'').toUpperCase().includes(q)||(s.location||'').toUpperCase().includes(q));
+  if (fType) filtered = filtered.filter(s=>s.serviceType===fType);
+  if (fPri) filtered = filtered.filter(s=>s.priority===fPri);
+  if (fStatus) {
+    if (fStatus==='returned') filtered = filtered.filter(s=>s.status==='returned');
+    else filtered = filtered.filter(s=>s.status==='active'&&getStatus(s)===fStatus);
+  }
+  filtered.sort((a,b)=>{
+    if (a.status!==b.status) return a.status==='active'?-1:1;
+    const order={'overdue':0,'due-soon':1,'active':2,'returned':3};
+    return (order[getStatus(a)]||2)-(order[getStatus(b)]||2);
+  });
+
+  const el = document.getElementById('services-table');
+  if (filtered.length===0) {
+    el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Ni zadetkov.</p></div>';
+    return;
+  }
+  el.innerHTML=`<table><thead><tr><th>SN</th><th>Tip</th><th>Prioriteta</th><th>Zahteva</th><th>Rok</th><th>Partner</th><th>Status</th><th></th></tr></thead>
+  <tbody>${filtered.map(s=>`<tr>
+    <td class="font-mono">${s.serialNumber}</td>
+    <td>${typeBadge(s.serviceType)}</td>
+    <td>${priBadge(s.priority)}</td>
+    <td class="text-sm text-gray">${fmt(s.requestDate)}</td>
+    <td class="text-sm">${fmt(s.dueDate)}</td>
+    <td class="text-sm text-gray">${s.servicePartner||'—'}</td>
+    <td>${statusBadge(s)}</td>
+    <td><button class="btn-icon" onclick="openDetailModal('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+// ============================================================
+// DEVICES LIST
+// ============================================================
+async function renderDevicesList() {
+  const services = await dbGet('services');
+  const q = (document.getElementById('dev-search')?.value||'').trim().toUpperCase();
+  const filter = document.getElementById('dev-filter')?.value||'';
+  const countBySN = {};
+  const activeBySN = {};
+  services.forEach(s=>{
+    countBySN[s.serialNumber]=(countBySN[s.serialNumber]||0)+1;
+    if(s.status==='active') activeBySN[s.serialNumber]=s;
+  });
+
+  let devs = ALL_DEVICES;
+  if (q) devs = devs.filter(sn=>sn.includes(q));
+  if (filter==='on-service') devs = devs.filter(sn=>activeBySN[sn]);
+  else if (filter==='serviced') devs = devs.filter(sn=>countBySN[sn]);
+  else if (filter==='never') devs = devs.filter(sn=>!countBySN[sn]);
+
+  const el = document.getElementById('devices-table');
+  if (devs.length===0){el.innerHTML='<div class="empty-state"><p>Ni zadetkov.</p></div>';return;}
+  el.innerHTML=`<table><thead><tr><th>Serijska številka</th><th>Skupaj servisov</th><th>Trenutni status</th><th></th></tr></thead>
+  <tbody>${devs.slice(0,200).map(sn=>{
+    const cnt=countBySN[sn]||0;
+    const active=activeBySN[sn];
+    return `<tr>
+      <td class="font-mono">${sn}</td>
+      <td>${cnt>0?`<span class="badge ${cnt>=3?'b-red':cnt>=2?'b-amber':'b-gray'}">${cnt}x</span>`:'<span class="text-gray text-xs">—</span>'}</td>
+      <td>${active?statusBadge(active):'<span class="badge b-green">Dosegljiv</span>'}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="showDeviceHistory('${sn}')">Zgodovina</button>
+      ${active?`<button class="btn btn-primary btn-sm" style="margin-left:4px" onclick="openDetailModal('${active.id}')">Servis</button>`:''}</td>
+    </tr>`;
+  }).join('')}</tbody></table>
+  ${devs.length>200?`<div class="text-xs text-gray" style="padding:10px">Prikazano 200 od ${devs.length}. Zoži iskanje.</div>`:''}`;
+}
+
+// ============================================================
+// TEAMS WEBHOOK
+// ============================================================
+async function sendTeamsReminder() {
+  const url = settings.teamsUrl;
+  if (!url) { toast('Nastavi Teams Webhook URL v Nastavitvah!','amber'); showView('settings'); return; }
+  const services = await dbGet('services');
+  const active = services.filter(s=>s.status==='active');
+  const overdue = active.filter(s=>getStatus(s)==='overdue');
+  const dueSoon = active.filter(s=>getStatus(s)==='due-soon');
+
+  if (overdue.length===0 && dueSoon.length===0) {
+    toast('Ni zapadlih ali skoraj zapadlih servisov.','green');
+    return;
+  }
+
+  const sections = [];
+  if (overdue.length) {
+    sections.push({
+      title: '🔴 Po roku ('+overdue.length+')',
+      facts: overdue.map(s=>({name:s.serialNumber, value:'Rok: '+fmt(s.dueDate)+' | '+s.serviceType.toUpperCase()+(s.servicePartner?' | '+s.servicePartner:'')}))
+    });
+  }
+  if (dueSoon.length) {
+    sections.push({
+      title: '⚠️ Rok v '+(settings.reminderDays||2)+' dnih ('+dueSoon.length+')',
+      facts: dueSoon.map(s=>({name:s.serialNumber, value:'Rok: '+fmt(s.dueDate)+' | '+s.serviceType.toUpperCase()+(s.servicePartner?' | '+s.servicePartner:'')}))
+    });
+  }
+
+  const payload = {
+    "@type":"MessageCard",
+    "@context":"http://schema.org/extensions",
+    "summary":"ServisMT opomnik",
+    "themeColor":"dc2626",
+    "title":"🔧 ServisMT – Opomnik servisnih rokov",
+    "text":"Skupaj aktivnih servisov: **"+active.length+"**",
+    "sections": sections
+  };
+
+  try {
+    document.getElementById('btn-teams').textContent = 'Pošiljam...';
+    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    if (r.ok || r.status===200) { toast('Opomnik poslan v Teams!','green'); }
+    else { toast('Napaka Teams: '+r.status,'red'); }
+  } catch(e) {
+    toast('Napaka pri pošiljanju: '+e.message,'red');
+  } finally {
+    document.getElementById('btn-teams').innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M19.5 4h-1.75a.75.75 0 0 0 0 1.5H19.5V19.5h-1.75a.75.75 0 0 0 0 1.5h1.75A1.5 1.5 0 0 0 21 19.5v-14A1.5 1.5 0 0 0 19.5 4zM4.5 4a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 4.5 21h1.75a.75.75 0 0 0 0-1.5H4.5V5.5h1.75a.75.75 0 0 0 0-1.5H4.5z"/></svg> Opomnik Teams`;
+  }
+}
+
+// ============================================================
+// IMPORT / EXPORT
+// ============================================================
+async function exportData() {
+  const services = await dbGet('services');
+  const sets = await dbGet('settings');
+  const data = { exportDate: new Date().toISOString(), version:1, services, settings:sets };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'servismt-backup-'+today()+'.json';
+  a.click();
+  toast('Podatki izvoženi','green');
+}
+
+async function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.services) throw new Error('Neveljavna datoteka');
+    if (!confirm(`Uvoz ${data.services.length} servisov? Obstoječi podatki bodo PREPISANI!`)) return;
+    await dbClear('services');
+    for (const s of data.services) await dbPut('services',s);
+    if (data.settings) for (const s of data.settings) await dbPut('settings',s);
+    await buildActiveSNs();
+    await loadSettings();
+    await refreshAll();
+    toast('Uvoz uspešen: '+data.services.length+' servisov','green');
+  } catch(err) {
+    toast('Napaka uvoza: '+err.message,'red');
+  }
+  e.target.value='';
+}
+
+// ============================================================
+// RESET
+// ============================================================
+async function confirmReset() {
+  if (!confirm('POZOR: Izbrisati VSE servisne podatke? To je nepopravljivo!')) return;
+  if (!confirm('Ste res prepričani? Vsi servisi bodo izgubljeni!')) return;
+  await dbClear('services');
+  activeSNs.clear();
+  toast('Vsi podatki so izbrisani','red');
+  await refreshAll();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const viewTitles = {
+  'dashboard':'Dashboard',
+  'new-service':'Nov servisni nalog',
+  'services':'Vsi servisi',
+  'devices':'Naprave',
+  'settings':'Nastavitve'
+};
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const fn = n.getAttribute('onclick');
+    if(fn&&fn.includes("'"+name+"'")) n.classList.add('active');
+  });
+  document.getElementById('topbar-title').textContent = viewTitles[name]||name;
+  if(name==='dashboard') renderDashboard();
+  else if(name==='services') renderServicesList();
+  else if(name==='devices') renderDevicesList();
+  else if(name==='new-service') {
+    document.getElementById('req-date').value = today();
+  }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
+});
+
+// ============================================================
+// REFRESH
+// ============================================================
+async function refreshAll() {
+  const currentView = document.querySelector('.view.active')?.id?.replace('view-','');
+  if(currentView==='dashboard') await renderDashboard();
+  else if(currentView==='services') await renderServicesList();
+  else if(currentView==='devices') await renderDevicesList();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  await initDB();
+  await loadSettings();
+  await buildActiveSNs();
+  await renderDashboard();
+  // Set default date
+  const rd = document.getElementById('req-date');
+  if(rd) rd.value = today();
+}
+
+init().catch(console.error);
+</script>
+</body>
+</html>
