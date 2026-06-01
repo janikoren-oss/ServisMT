@@ -773,6 +773,7 @@ function calcDueDate() {
 // ── NEW SERVICE ───────────────────────────────────────────────
 async function submitNewService() {
   if (!selectedSN) { toast('Izberi serijsko \u0161tevilko iz seznama!','amber'); return; }
+  if (activeSNs.has(selectedSN)) { toast('Naprava '+selectedSN+' ima \u017ee aktiven servis!','red'); return; }
   var reqDate = document.getElementById('req-date').value;
   var errDesc = document.getElementById('error-desc').value.trim();
   if (!reqDate) { toast('Vnesi datum zahteve!','amber'); return; }
