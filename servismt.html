@@ -180,6 +180,10 @@ textarea{resize:vertical;min-height:72px}
 
     <!-- DASHBOARD -->
     <div id="view-dashboard" class="view active">
+      <div id="local-storage-notice" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#1e40af;display:flex;justify-content:space-between;align-items:center">
+        <span>&#128196; Podatki so shranjeni <strong>lokalno v tem brskalniku</strong>. Za ve&#269; uporabnikov je potreben stre&#382;nik.</span>
+        <button onclick="document.getElementById('local-storage-notice').style.display='none'" style="background:none;border:none;cursor:pointer;color:#1e40af;font-size:1rem;padding:0 4px">&#215;</button>
+      </div>
       <div id="dash-alerts"></div>
       <div class="stats-grid" id="stats-grid"></div>
       <div class="dash-grid">
@@ -338,6 +342,11 @@ textarea{resize:vertical;min-height:72px}
     <div id="view-settings" class="view">
       <div class="section-hdr"><h2 class="section-title">Nastavitve</h2></div>
       <div style="max-width:580px">
+        <div style="background:#fef3c7;border:1.5px solid #fbbf24;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.83rem;color:#92400e">
+          <strong>&#9888; Informacija o shranjevanju podatkov</strong><br>
+          Vsi podatki se shranjujejo <strong>lokalno v va&#353;em brskalniku</strong> (IndexedDB). Podatki so vezani na ta brskalnik in ta ra&#269;unalnik &mdash; drugi uporabnik na drugem ra&#269;unalniku <strong>ne bo videl va&#353;ih vnosov</strong>.<br>
+          Za deljenje med ve&#269; uporabniki: <strong>redno izvozite JSON</strong> in ga dajte na skupno mesto, ali zahtevajte namestitev verzije s stre&#382;nikom.
+        </div>
         <div class="card mb-2">
           <div class="settings-section">
             <h3>&#9201; Roki za servis</h3>
@@ -887,7 +896,7 @@ async function openDetail(id) {
 
   var footer = '<button class="btn btn-secondary" data-action="history" data-sn="' + escHtml(svc.serialNumber) + '">Zgodovina naprave</button>';
   if (svc.status === 'active') {
-    footer += ' <button class="btn btn-success" data-action="open-return" data-id="' + escHtml(svc.id) + '">&#10003; Oznaci kot vrnjen</button>';
+    footer += ' <button class="btn btn-success" data-action="open-return" data-id="' + escHtml(svc.id) + '">&#10003; Zaklju&#269;i / Vrni</button>';
   }
   if (isAdmin) {
     footer = '<button class="btn btn-danger" data-action="delete" data-id="' + escHtml(svc.id) + '">Izbri&#353;i</button>'
@@ -1073,9 +1082,12 @@ async function renderDashboard() {
     var rows = '';
     sorted.forEach(function(s) {
       rows += '<tr><td class="font-mono">' + escHtml(s.serialNumber) + '</td><td>' + badgeType(s.serviceType) + '</td><td class="text-sm text-gray">' + fmtDate(s.requestDate) + '</td><td class="text-sm">' + fmtDate(s.dueDate) + '</td><td>' + badgeStatus(s) + '</td>'
-        + '<td><button class="btn-icon" data-action="view-detail" data-id="' + escHtml(s.id) + '" title="Podrobnosti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button></td></tr>';
+        + '<td style="white-space:nowrap">'
+        + '<button class="btn btn-success btn-sm" data-action="open-return" data-id="' + escHtml(s.id) + '" title="Zaklju&#269;i servis" style="margin-right:4px">&#10003; Zaklju&#269;i</button>'
+        + '<button class="btn-icon" data-action="view-detail" data-id="' + escHtml(s.id) + '" title="Podrobnosti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>'
+        + '</td></tr>';
     });
-    document.getElementById('dash-active-table').innerHTML = '<table><thead><tr><th>SN</th><th>Tip</th><th>Zahteva</th><th>Rok</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    document.getElementById('dash-active-table').innerHTML = '<table><thead><tr><th>SN</th><th>Tip</th><th>Zahteva</th><th>Rok</th><th>Status</th><th>Akcije</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
   // Top devices
@@ -1147,6 +1159,14 @@ async function renderServicesList() {
 
   var rows = '';
   filtered.forEach(function(s) {
+    var actionBtns = '<button class="btn-icon" data-action="view-detail" data-id="' + escHtml(s.id) + '" title="Podrobnosti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>';
+    if (s.status === 'active') {
+      actionBtns = '<button class="btn btn-success btn-sm" data-action="open-return" data-id="' + escHtml(s.id) + '" style="margin-right:4px">&#10003; Zaklju&#269;i</button>' + actionBtns;
+    }
+    if (isAdmin) {
+      actionBtns += ' <button class="btn btn-warning btn-sm" data-action="edit" data-id="' + escHtml(s.id) + '">&#9998;</button>';
+      actionBtns += ' <button class="btn btn-danger btn-sm" data-action="delete" data-id="' + escHtml(s.id) + '">&#215;</button>';
+    }
     rows += '<tr>'
       + '<td class="font-mono">' + escHtml(s.serialNumber) + '</td>'
       + '<td>' + (s.serviceType === 'hardware' ? '<span class="badge b-purple">Hardware</span>' : '<span class="badge b-blue">Software</span>') + '</td>'
@@ -1155,10 +1175,10 @@ async function renderServicesList() {
       + '<td class="text-sm">' + fmtDate(s.dueDate) + '</td>'
       + '<td class="text-sm text-gray">' + escHtml(s.servicePartner || '—') + '</td>'
       + '<td>' + badgeStatus(s) + '</td>'
-      + '<td><button class="btn-icon" data-action="view-detail" data-id="' + escHtml(s.id) + '" title="Podrobnosti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button></td>'
+      + '<td style="white-space:nowrap">' + actionBtns + '</td>'
       + '</tr>';
   });
-  el.innerHTML = '<table><thead><tr><th>SN</th><th>Tip</th><th>Prioriteta</th><th>Zahteva</th><th>Rok</th><th>Partner</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+  el.innerHTML = '<table><thead><tr><th>SN</th><th>Tip</th><th>Prioriteta</th><th>Zahteva</th><th>Rok</th><th>Partner</th><th>Status</th><th>Akcije</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 // ── DEVICES LIST ─────────────────────────────────────────────────────────
