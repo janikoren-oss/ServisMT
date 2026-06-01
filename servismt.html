@@ -47,7 +47,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .topbar-actions{display:flex;gap:8px;align-items:center}
 .content{padding:24px 26px;flex:1}
 /* ─ CARDS & GRID ─ */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin-bottom:18px}
 .stat-card{background:#fff;border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .stat-icon{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .stat-icon svg{width:20px;height:20px}
@@ -115,6 +115,8 @@ textarea{resize:vertical;min-height:68px}
 .sn-drop.open{display:block}
 .sn-opt{padding:7px 10px;cursor:pointer;font-size:.8rem;font-family:monospace}
 .sn-opt:hover{background:#eff6ff}
+.sn-opt.sn-in-service{color:#dc2626;cursor:not-allowed;background:#fff5f5}
+.sn-opt.sn-in-service:hover{background:#fee2e2}
 .sn-empty{padding:10px;color:#94a3b8;font-size:.8rem;text-align:center}
 /* ─ MODAL ─ */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -517,7 +519,14 @@ textarea{resize:vertical;min-height:68px}
     <div class="modal-header"><h3>&#10003; Zaklju&#269;i servis</h3><button class="close-x" data-close="modal-return">&#215;</button></div>
     <div class="modal-body">
       <div class="form-group mb-2"><label>Datum vrnitve *</label><input type="date" id="return-date"></div>
-      <div class="form-group"><label>Komentar ob vrnitvi</label><textarea id="return-note" placeholder="Kaj je bilo narejeno..."></textarea></div>
+      <div class="form-group">
+        <label>Rezultat popravila *</label>
+        <div class="radio-group">
+          <div class="radio-opt"><input type="radio" name="repair-result" id="repair-fixed" value="fixed" checked><label for="repair-fixed">&#10003; Popravljeno</label></div>
+          <div class="radio-opt"><input type="radio" name="repair-result" id="repair-not-fixed" value="not_fixed"><label for="repair-not-fixed">&#10007; Ni popravljeno</label></div>
+        </div>
+      </div>
+      <div class="form-group"><label>Komentar ob vrnitvi</label><textarea id="return-note" placeholder="Kaj je bilo narejeno, kaj ostaja..."></textarea></div>
       <input type="hidden" id="return-svc-id">
     </div>
     <div class="modal-footer">
@@ -675,7 +684,10 @@ function calcStatus(s) {
 }
 function badgeStatus(s) {
   var st=calcStatus(s);
-  if (st==='returned') return '<span class="badge b-green">Vrnjen</span>';
+  if (st==='returned') {
+    if (s.repair_result==='not_fixed') return '<span class="badge b-amber">Ni popravljeno</span>';
+    return '<span class="badge b-green">Vrnjen</span>';
+  }
   if (st==='overdue') { var d=diffDays(s.due_date,todayStr()); return '<span class="badge b-red">Po roku ('+d+'d)</span>'; }
   if (st==='due-soon') { var d2=diffDays(todayStr(),s.due_date); return '<span class="badge b-amber">Rok v '+d2+'d</span>'; }
   return '<span class="badge b-blue">Servis</span>';
@@ -734,6 +746,11 @@ function initSnSelector() {
   drop.addEventListener('click', function(e) {
     var it = e.target.closest('.sn-opt');
     if (!it) return;
+    if (it.dataset.disabled) {
+      document.getElementById('sn-feedback').textContent = '\u26d4 '+it.dataset.sn+' je trenutno na servisu \u2013 ni mogo\u010de izbrati';
+      document.getElementById('sn-feedback').style.color = '#dc2626';
+      return;
+    }
     selectedSN = it.dataset.sn;
     inp.value = selectedSN;
     document.getElementById('sn-feedback').textContent = '\u2713 Izbrano: '+selectedSN;
@@ -745,14 +762,19 @@ function initSnSelector() {
 function renderSnDrop() {
   var q = document.getElementById('sn-input').value.trim().toUpperCase();
   var drop = document.getElementById('sn-drop');
-  var avail = ALL_DEVICES.filter(function(sn){ return !activeSNs.has(sn) && (q===''||sn.indexOf(q)!==-1); });
-  if (!avail.length) { drop.innerHTML='<div class="sn-empty">Ni zadetkov ali SN je &#382;e na servisu</div>'; }
-  else {
-    var h='';
-    avail.slice(0,60).forEach(function(sn){ h+='<div class="sn-opt" data-sn="'+sn+'">'+sn+'</div>'; });
-    if (avail.length>60) h+='<div class="sn-empty">+' +(avail.length-60)+' ve&#269;... zo&#382;i iskanje</div>';
-    drop.innerHTML=h;
-  }
+  if (!q) { drop.classList.remove('open'); return; }
+  var matched = ALL_DEVICES.filter(function(sn){ return sn.indexOf(q)!==-1; });
+  if (!matched.length) { drop.innerHTML='<div class="sn-empty">Ni zadetkov</div>'; drop.classList.add('open'); return; }
+  var h='';
+  matched.slice(0,60).forEach(function(sn){
+    if (activeSNs.has(sn)) {
+      h+='<div class="sn-opt sn-in-service" data-sn="'+sn+'" data-disabled="1">'+sn+' <span style="font-size:.72rem;font-family:sans-serif">&#128308; na servisu</span></div>';
+    } else {
+      h+='<div class="sn-opt" data-sn="'+sn+'">'+sn+'</div>';
+    }
+  });
+  if (matched.length>60) h+='<div class="sn-empty">+'+(matched.length-60)+' več... zoži iskanje</div>';
+  drop.innerHTML=h;
   drop.classList.add('open');
 }
 
@@ -791,7 +813,8 @@ async function submitNewService() {
     service_partner: document.getElementById('partner').value.trim() || 'Billy POS d.o.o.',
     error_description: errDesc,
     technician_notes: document.getElementById('tech-notes').value.trim(),
-    created_by: currentUser.id
+    created_by: currentUser.id,
+    created_by_name: (currentProfile && currentProfile.full_name) || currentUser.email
   };
   try {
     await dbInsert('services', svc);
@@ -842,6 +865,8 @@ function openDetail(id) {
     +'<div class="detail-cell"><div class="lbl">Datum vrnitve</div><div class="val">'+fmtDate(svc.returned_date)+'</div></div>'
     +'<div class="detail-cell"><div class="lbl">Naprava iz lokacije</div><div class="val">'+escHtml(svc.location||'—')+'</div></div>'
     +'<div class="detail-cell"><div class="lbl">Servisni partner</div><div class="val">'+escHtml(svc.service_partner||'—')+'</div></div>'
+    +'<div class="detail-cell"><div class="lbl">Ustvaril</div><div class="val">'+escHtml(svc.created_by_name||'—')+'</div></div>'
+    +(svc.returned_by_name?'<div class="detail-cell"><div class="lbl">Zaključil</div><div class="val">'+escHtml(svc.returned_by_name)+(svc.repair_result==='not_fixed'?' <span class="badge b-amber" style="font-size:.65rem">Ni popravljeno</span>':'')+'</div></div>':'')
     +'</div>'
     +'<hr style="border:none;border-top:1px solid #f1f5f9;margin:14px 0">'
     +'<div class="lbl mb-1">Opis napake</div><div style="background:#f8fafc;border-radius:7px;padding:9px;font-size:.82rem;line-height:1.5">'+escHtml(svc.error_description)+'</div>';
@@ -908,6 +933,7 @@ function openReturnModal(id) {
   document.getElementById('return-svc-id').value=id;
   document.getElementById('return-date').value=todayStr();
   document.getElementById('return-note').value='';
+  document.getElementById('repair-fixed').checked=true;
   closeModal('modal-detail');
   openModal('modal-return');
 }
@@ -917,11 +943,20 @@ async function confirmReturn() {
   if (!rd) { toast('Vnesi datum vrnitve!','amber'); return; }
   var svc=allServicesCache.find(function(s){return s.id===id;});
   if (!svc) return;
+  var repairEl=document.querySelector('input[name="repair-result"]:checked');
+  var repairResult=repairEl?repairEl.value:'fixed';
   try {
-    await dbUpdate('services',id,{ status:'returned', returned_date:rd, return_note:document.getElementById('return-note').value.trim(), updated_at:new Date().toISOString() });
+    await dbUpdate('services',id,{
+      status:'returned',
+      returned_date:rd,
+      return_note:document.getElementById('return-note').value.trim(),
+      repair_result:repairResult,
+      returned_by_name:(currentProfile&&currentProfile.full_name)||currentUser.email,
+      updated_at:new Date().toISOString()
+    });
     await loadServices();
     closeModal('modal-return');
-    toast('Terminal vrnjen: '+svc.serial_number,'green');
+    toast(repairResult==='not_fixed'?'Vrnjeno – ni popravljeno: '+svc.serial_number:'Terminal vrnjen: '+svc.serial_number, repairResult==='not_fixed'?'amber':'green');
     await refreshView();
   } catch(e) { toast('Napaka: '+e.message,'red'); }
 }
@@ -962,7 +997,8 @@ function showDeviceHistory(sn) {
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
         +'<span style="font-weight:700;font-size:.85rem">'+fmtDate(s.request_date)+'</span>'
         +'<span>'+badgeType(s.service_type)+' '+badgeStatus(s)+'</span></div>'
-        +'<div class="text-xs text-gray" style="margin-bottom:4px">Prevzem: '+fmtDate(s.received_date)+' &bull; Rok: '+fmtDate(s.due_date)+' &bull; Vrnjen: '+fmtDate(s.returned_date)+'</div>'
+        +'<div class="text-xs text-gray" style="margin-bottom:4px">Prevzem: '+fmtDate(s.received_date)+' &bull; Rok: '+fmtDate(s.due_date)+' &bull; Vrnjen: '+fmtDate(s.returned_date)+(s.created_by_name?' &bull; Ustvaril: '+escHtml(s.created_by_name):'')+(s.returned_by_name?' &bull; Zaključil: '+escHtml(s.returned_by_name):'')+'</div>'
+        +(s.repair_result==='not_fixed'?'<div style="background:#fef3c7;border-radius:6px;padding:4px 8px;font-size:.78rem;color:#92400e;margin-bottom:4px">&#10007; Ni bilo popravljeno</div>':'')
         +'<div style="background:#f8fafc;border-radius:6px;padding:6px;font-size:.8rem;line-height:1.4">'+escHtml(s.error_description)+'</div>'
         +(s.return_note?'<div class="text-xs text-gray" style="margin-top:3px;padding:0 3px">&#8617; '+escHtml(s.return_note)+'</div>':'')
         +'</div>'
@@ -991,11 +1027,13 @@ async function renderDashboard() {
   document.getElementById('dash-alerts').innerHTML=alerts;
 
   // Stats
+  var notFixed=all.filter(function(s){return s.repair_result==='not_fixed';});
   document.getElementById('stats-grid').innerHTML=
     statCard('si-blue','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',active.length,'V servisu')+
     statCard('si-red','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',overdue.length,'Po roku')+
     statCard('si-amber','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',dueSoon.length,'Rok v '+(CFG.reminderDays||2)+' dnih')+
-    statCard('si-green','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',returned.length,'Vrnjenih v obdobju');
+    statCard('si-green','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',returned.length,'Vrnjenih v obdobju')+
+    statCard('si-red','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',notFixed.length,'Ni popravljeno (skupaj)');
 
   // Active table
   var sorted=active.slice().sort(function(a,b){ var o={overdue:0,'due-soon':1,active:2}; return (o[calcStatus(a)]||2)-(o[calcStatus(b)]||2); }).slice(0,12);
@@ -1012,20 +1050,25 @@ async function renderDashboard() {
     document.getElementById('dash-active-table').innerHTML='<table><thead><tr><th>SN</th><th>Tip</th><th>Zahteva</th><th>Lokacija</th><th>Rok</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
-  // Location stats
-  var byLoc={};
-  active.forEach(function(s){ var l=s.location||'Neznano'; byLoc[l]=(byLoc[l]||0)+1; });
-  var total=active.length;
-  var locSorted=Object.entries(byLoc).sort(function(a,b){return b[1]-a[1];});
+  // Location stats — full history + currently active
+  var byLocAll={}, byLocActive={};
+  all.forEach(function(s){ var l=s.location||'Neznano'; byLocAll[l]=(byLocAll[l]||0)+1; });
+  active.forEach(function(s){ var l=s.location||'Neznano'; byLocActive[l]=(byLocActive[l]||0)+1; });
+  var totalAll=all.length;
+  var locSorted=Object.entries(byLocAll).sort(function(a,b){return b[1]-a[1];});
   var maxLoc=locSorted.length?locSorted[0][1]:1;
   if (!locSorted.length) {
-    document.getElementById('location-stats').innerHTML='<div class="empty-state" style="padding:16px 0"><p>Ni aktivnih servisov.</p></div>';
+    document.getElementById('location-stats').innerHTML='<div class="empty-state" style="padding:16px 0"><p>Ni podatkov.</p></div>';
   } else {
     var lh='';
     locSorted.forEach(function(e){
-      var pct=total?Math.round(e[1]/total*100):0;
+      var pct=totalAll?Math.round(e[1]/totalAll*100):0;
       var barW=Math.round(e[1]/maxLoc*100);
-      lh+='<div class="loc-row"><span class="loc-name">'+escHtml(e[0])+'</span><div class="loc-bar"><div class="loc-fill" style="width:'+barW+'%"></div></div><span class="loc-cnt">'+e[1]+'</span><span class="loc-pct">'+pct+'%</span></div>';
+      var actCnt=byLocActive[e[0]]||0;
+      lh+='<div class="loc-row"><span class="loc-name">'+escHtml(e[0])+'</span>'
+        +'<div class="loc-bar"><div class="loc-fill" style="width:'+barW+'%"></div></div>'
+        +'<span class="loc-cnt">'+e[1]+'</span>'
+        +'<span class="loc-pct">'+pct+'%'+(actCnt?' <span style="color:#2563eb;font-size:.68rem">('+actCnt+' v ser.)</span>':'')+'</span></div>';
     });
     document.getElementById('location-stats').innerHTML=lh;
   }
@@ -1104,11 +1147,12 @@ async function renderServicesList() {
       +'<td class="text-xs text-gray">'+fmtDate(s.request_date)+'</td>'
       +'<td class="text-xs">'+fmtDate(s.due_date)+'</td>'
       +'<td class="text-xs text-gray">'+escHtml(s.location||'—')+'</td>'
+      +'<td class="text-xs text-gray">'+escHtml(s.created_by_name||'—')+'</td>'
       +'<td>'+badgeStatus(s)+'</td>'
       +'<td style="white-space:nowrap">'+actionBtns+'</td>'
       +'</tr>';
   });
-  el.innerHTML='<table><thead><tr><th>SN (klikni za zgodovino)</th><th>Tip</th><th>Pri.</th><th>Zahteva</th><th>Rok</th><th>Lokacija</th><th>Status</th><th>Akcije</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  el.innerHTML='<table><thead><tr><th>SN (klikni za zgodovino)</th><th>Tip</th><th>Pri.</th><th>Zahteva</th><th>Rok</th><th>Lokacija</th><th>Ustvaril</th><th>Status</th><th>Akcije</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 // ── DEVICES LIST ───────────────────────────────────────────────

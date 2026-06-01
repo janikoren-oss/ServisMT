@@ -7,6 +7,13 @@
 --   2. Prilepi ta celoten SQL in klikni "Run"
 -- ============================================================
 
+-- ── 0. POSODOBITEV OBSTOJEČE BAZE (če že imaš tabele) ────────
+-- Če poganjate prvič, preskočite ta blok — tabele spodaj že vsebujejo ta polja.
+-- Če imate obstoječo bazo, dodajte nova polja z:
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS repair_result TEXT DEFAULT '';
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS created_by_name TEXT DEFAULT '';
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS returned_by_name TEXT DEFAULT '';
+
 -- ── 1. TABELE ────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS public.services (
@@ -24,6 +31,9 @@ CREATE TABLE IF NOT EXISTS public.services (
   service_partner TEXT DEFAULT 'Billy POS d.o.o.',
   error_description TEXT DEFAULT '',
   technician_notes  TEXT DEFAULT '',
+  repair_result     TEXT DEFAULT '',
+  created_by_name   TEXT DEFAULT '',
+  returned_by_name  TEXT DEFAULT '',
   created_by      UUID REFERENCES auth.users(id),
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   updated_at      TIMESTAMPTZ DEFAULT NOW()
