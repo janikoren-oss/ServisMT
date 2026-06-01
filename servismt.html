@@ -762,8 +762,9 @@ function initSnSelector() {
 function renderSnDrop() {
   var q = document.getElementById('sn-input').value.trim().toUpperCase();
   var drop = document.getElementById('sn-drop');
-  if (!q) { drop.classList.remove('open'); return; }
-  var matched = ALL_DEVICES.filter(function(sn){ return sn.indexOf(q)!==-1; });
+  var matched = q
+    ? ALL_DEVICES.filter(function(sn){ return sn.indexOf(q)!==-1; })
+    : ALL_DEVICES.slice(0, 60);
   if (!matched.length) { drop.innerHTML='<div class="sn-empty">Ni zadetkov</div>'; drop.classList.add('open'); return; }
   var h='';
   matched.slice(0,60).forEach(function(sn){
