@@ -556,9 +556,12 @@ var allServicesCache = [];
 var dashPeriod = { type:'month', from:'', to:'' };
 var selectedSN = '';
 
+var SUPA_URL = 'https://wkjumkmdqxdeayhnhrdq.supabase.co';
+var SUPA_KEY = 'sb_publishable_NbwhWTyqA6A23ty0e3kG1Q_hNUF8_dM';
+
 function initSupabase() {
-  var url = localStorage.getItem('smt_url') || '';
-  var key = localStorage.getItem('smt_key') || '';
+  var url = localStorage.getItem('smt_url') || SUPA_URL;
+  var key = localStorage.getItem('smt_key') || SUPA_KEY;
   if (!url || !key) return false;
   supa = supabase.createClient(url, key);
   return true;
