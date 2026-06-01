@@ -797,7 +797,6 @@ async function submitNewService() {
   };
   try {
     await dbInsert('services', svc);
-    activeSNs.add(selectedSN);
     toast('Servis shranjen: '+selectedSN, 'green');
     resetNewServiceForm();
     await loadServices();
@@ -883,9 +882,6 @@ async function saveEdit() {
   var typeEl=document.querySelector('input[name="edit-type"]:checked');
   var priEl=document.querySelector('input[name="edit-pri"]:checked');
   var newStatus=document.getElementById('edit-status').value;
-  var oldSvc=allServicesCache.find(function(s){return s.id===id;});
-  if (oldSvc && oldSvc.status==='active' && newStatus==='returned') activeSNs.delete(oldSvc.serial_number);
-  else if (oldSvc && oldSvc.status==='returned' && newStatus==='active') activeSNs.add(oldSvc.serial_number);
   var upd={
     service_type: typeEl?typeEl.value:'hardware',
     priority: priEl?priEl.value:'normal',
@@ -920,7 +916,6 @@ async function confirmReturn() {
   if (!svc) return;
   try {
     await dbUpdate('services',id,{ status:'returned', returned_date:rd, return_note:document.getElementById('return-note').value.trim(), updated_at:new Date().toISOString() });
-    activeSNs.delete(svc.serial_number);
     await loadServices();
     closeModal('modal-return');
     toast('Terminal vrnjen: '+svc.serial_number,'green');
@@ -935,7 +930,6 @@ async function doDelete(id) {
   var svc=allServicesCache.find(function(s){return s.id===id;});
   try {
     await dbDelete('services',id);
-    if (svc) activeSNs.delete(svc.serial_number);
     await loadServices();
     closeModal('modal-detail');
     toast('Nalog izbrisan','red');
